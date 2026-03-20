@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Nexus Pay — Statements</title>
+  <link rel="icon" href="logo_nexus.png">   
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--primary:#1a4cff;--secondary:#7b3fe4;--success:#00b38a;--danger:#ff5e7c;--warning:#fdb24d;--gray:#6e7687;--gray-light:#e9ecf2;--light:#f5f7fd;--white:#fff;--dark:#121826;--gradient:linear-gradient(145deg,#1a4cff,#7b3fe4);--shadow-sm:0 4px 12px rgba(0,0,0,.04);--radius:16px}
+    html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--light); color: var(--dark); overflow: hidden; }
+
+    /* ══ SHELL ══ */
+    .shell { display: flex; height: 100vh; }
+
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .topbar{background:var(--white);padding:1.25rem 2rem;border-bottom:1px solid var(--gray-light);box-shadow:var(--shadow-sm)}
+    .topbar h1{font-size:1.3rem;font-weight:800}.topbar p{color:var(--gray);font-size:.85rem;margin-top:.1rem}
+    .content{flex:1;overflow-y:auto;padding:2rem;display:flex;flex-direction:column;gap:1.5rem}
+    .content::-webkit-scrollbar{width:5px}.content::-webkit-scrollbar-thumb{background:var(--gray-light);border-radius:4px}
+
+    .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+    .kpi{background:var(--white);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow-sm);border:1px solid var(--gray-light)}
+    .kpi-label{font-size:.75rem;color:var(--gray);font-weight:500;margin-bottom:.35rem}
+    .kpi-val{font-size:1.4rem;font-weight:800}
+
+    .stmt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.25rem}
+    .stmt-card{background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .2s,box-shadow .2s}
+    .stmt-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(26,76,255,.1)}
+    .stmt-header{padding:1.25rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--gray-light)}
+    .sh-left h3{font-size:1rem;font-weight:700}.sh-left p{font-size:.78rem;color:var(--gray);margin-top:.15rem}
+    .sh-badge{font-size:.72rem;font-weight:700;padding:.25rem .65rem;border-radius:20px}
+    .stmt-body{padding:1.25rem;display:flex;flex-direction:column;gap:.9rem}
+    .stmt-row{display:flex;justify-content:space-between;align-items:center}
+    .sr-label{font-size:.78rem;color:var(--gray);display:flex;align-items:center;gap:.4rem}
+    .sr-val{font-size:.88rem;font-weight:600}
+    .stmt-footer{padding:1rem 1.25rem;background:#f9fafb;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--gray-light)}
+    .sf-min{font-size:.78rem;color:var(--gray)}
+    .sf-min span{color:var(--dark);font-weight:600}
+    .pay-btn{padding:.55rem 1.1rem;background:var(--gradient);color:#fff;font-size:.82rem;font-weight:700;border:none;border-radius:8px;cursor:pointer;transition:opacity .18s}
+    .pay-btn:hover{opacity:.88}
+    .spinner{width:36px;height:36px;border:3px solid var(--gray-light);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:5rem auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    
+    /* Repayment Modal Styles */
+    .pay-modal {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+        backdrop-filter: blur(4px); z-index: 10000; align-items: center; justify-content: center;
+    }
+    .pay-modal.open { display: flex; }
+    .pay-modal-content {
+        background: var(--white); border-radius: 28px; width: 90%; max-width: 450px;
+        padding: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.2); animation: modalSlideUp 0.3s ease;
+    }
+    @keyframes modalSlideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .pay-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .pay-modal-header h2 { font-size: 1.25rem; font-weight: 800; }
+    .pay-field { margin-bottom: 1.25rem; }
+    .pay-field label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--gray); margin-bottom: 0.5rem; }
+    .pay-input {
+        width: 100%; padding: 0.85rem 1rem; border: 1.5px solid var(--gray-light); 
+        border-radius: 12px; font-family: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+    }
+    .pay-input:focus { border-color: var(--primary); }
+    .pay-summary { background: var(--light); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    .pay-summary-row { display: flex; justify-content: space-between; font-size: 0.88rem; }
+    .pay-summary-row span:first-child { color: var(--gray); }
+    .pay-summary-row span:last-child { font-weight: 700; color: var(--dark); }
+
+    @media(max-width:780px){.kpi-row{grid-template-columns:1fr 1fr}.content{padding:1rem}.stmt-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  
+  <div class="shell">
+    <!-- Sidebar dynamically injected by sidebar.js -->
+
+    <div class="main">
+      <div class="topbar"><h1>Statements</h1><p>View billing cycles and payment dues</p></div>
+      <div class="content">
+        <div class="kpi-row" id="kpiRow" style="display:none">
+          <div class="kpi"><div class="kpi-label">Total Due</div><div class="kpi-val" id="kTotalDue">—</div></div>
+          <div class="kpi"><div class="kpi-label">Minimum Due</div><div class="kpi-val" style="color:var(--warning)" id="kMinDue">—</div></div>
+          <div class="kpi"><div class="kpi-label">Nearest Deadline</div><div class="kpi-val" style="color:var(--danger)" id="kDeadline">—</div></div>
+        </div>
+        <div id="loader"><div class="spinner"></div></div>
+        <div class="stmt-grid" id="stmtGrid"></div>
+
+        <!-- NEW: Grace Period Request Section -->
+        <div id="graceSection" style="display:none; flex-direction:column; gap:1.5rem; margin-top:2rem; padding-top:2rem; border-top:2px solid var(--gray-light)">
+          <div class="kpi-row" style="grid-template-columns: 1fr 1fr; gap:1.5rem">
+            <!-- Request Form Card -->
+            <div class="kpi" style="height:auto">
+              <h2 style="font-size:1.1rem; font-weight:800; margin-bottom:1.2rem; display:flex; align-items:center; gap:0.6rem">
+                <i class="fas fa-clock" style="color:var(--primary)"></i> Request Grace Period
+              </h2>
+              <p style="font-size:0.85rem; color:var(--gray); margin-bottom:1.5rem">If you need more time to pay your bill, you can request an extension of up to 15 days.</p>
+              
+              <div style="background:var(--light); border-radius:12px; padding:1rem; margin-bottom:1.5rem; display:flex; flex-direction:column; gap:0.5rem">
+                <div style="display:flex; justify-content:space-between; font-size:0.85rem">
+                  <span style="color:var(--gray)">For Card:</span>
+                  <span id="gCardLabel" style="font-weight:700">----</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.85rem">
+                  <span style="color:var(--gray)">Due Amount:</span>
+                  <span id="gDueAmount" style="font-weight:700">₹0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.85rem">
+                  <span style="color:var(--gray)">Due Date:</span>
+                  <span id="gDueDate" style="font-weight:700; color:var(--danger)">----</span>
+                </div>
+              </div>
+
+              <form id="graceForm" onsubmit="event.preventDefault(); submitGraceRequest();">
+                <div style="margin-bottom:1.2rem">
+                  <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.5rem">Grace Period Days (1-15)</label>
+                  <input type="number" id="graceDays" min="1" max="15" value="7" required style="width:100%; padding:0.75rem 1rem; border:1.5px solid var(--gray-light); border-radius:10px; font-family:inherit; outline:none; transition:border-color 0.2s">
+                </div>
+                <div style="margin-bottom:1.5rem">
+                  <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.5rem">Reason for Request</label>
+                  <textarea id="graceReason" required placeholder="e.g. Salary delay" style="width:100%; padding:0.75rem 1rem; border:1.5px solid var(--gray-light); border-radius:10px; font-family:inherit; outline:none; transition:border-color 0.2s; min-height:80px; resize:none"></textarea>
+                </div>
+                <div style="display:flex; gap:1rem; margin-top:0.5rem">
+                  <button type="submit" class="pay-btn" style="flex:1; padding:0.85rem; font-size:0.9rem">Request Grace Period</button>
+                  <button type="button" class="pay-btn" onclick="document.getElementById('graceSection').style.display='none'" style="flex:1; padding:0.85rem; font-size:0.9rem; background:var(--gray-light); color:var(--dark)">Cancel</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Request History Card -->
+            <div class="kpi" style="height:auto">
+              <h2 style="font-size:1.1rem; font-weight:800; margin-bottom:1.2rem; display:flex; align-items:center; gap:0.6rem">
+                <i class="fas fa-history" style="color:var(--secondary)"></i> Grace Period History
+              </h2>
+              <div style="overflow-x:auto">
+                <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left">
+                  <thead>
+                    <tr style="border-bottom:2px solid var(--gray-light)">
+                      <th style="padding:0.75rem 0.5rem; color:var(--gray)">ID</th>
+                      <th style="padding:0.75rem 0.5rem; color:var(--gray)">Days</th>
+                      <th style="padding:0.75rem 0.5rem; color:var(--gray)">New Due Date</th>
+                      <th style="padding:0.75rem 0.5rem; color:var(--gray)">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="graceHistoryBody">
+                    <tr><td colspan="4" style="padding:2rem; text-align:center; color:var(--gray)">No previous requests</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Repayment Modal -->
+  <div id="repayModal" class="pay-modal">
+    <div class="pay-modal-content">
+      <div class="pay-modal-header">
+        <h2>Complete Repayment</h2>
+        <button onclick="closeRepaymentModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray)">&times;</button>
+      </div>
+      
+      <div class="pay-summary">
+        <div class="pay-summary-row"><span>Card</span><span id="pCardLabel">----</span></div>
+        <div class="pay-summary-row"><span>Statement Balance</span><span id="pBalance">₹0</span></div>
+        <div class="pay-summary-row"><span>Minimum Due</span><span id="pMinDue">₹0</span></div>
+      </div>
+
+      <form id="repayForm" onsubmit="event.preventDefault(); processRepayment();">
+        <div class="pay-field">
+          <label>Payment Method</label>
+          <select id="pMethod" class="pay-input" required>
+            <option value="UPI">UPI Payment</option>
+            <option value="Debit Card">Debit Card</option>
+            <option value="Net Banking">Net Banking</option>
+          </select>
+        </div>
+        <div class="pay-field">
+          <label>Amount to Pay</label>
+          <input type="number" id="pAmount" class="pay-input" placeholder="Enter amount" required step="0.01" min="1">
+        </div>
+        <div class="pay-field">
+          <label>MPIN (4 digits)</label>
+          <input type="password" id="pMpin" class="pay-input" placeholder="••••" required maxlength="4" pattern="\d{4}">
+        </div>
+        <div style="display:flex; gap:1rem; margin-top:1.5rem">
+          <button type="submit" class="pay-btn" style="flex:2; padding:0.9rem">Confirm Payment</button>
+          <button type="button" class="pay-btn" onclick="closeRepaymentModal()" style="flex:1; padding:0.9rem; background:var(--gray-light); color:var(--dark)">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Success Modal for Repayment -->
+  <div id="repaySuccessModal" class="pay-modal">
+    <div class="pay-modal-content" style="text-align:center; padding:2.5rem">
+      <div style="width:72px; height:72px; background:rgba(0,179,138,0.1); color:var(--success); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 1.5rem">
+        <i class="fas fa-check"></i>
+      </div>
+      <h2 style="font-size:1.35rem; margin-bottom:0.5rem">Repayment Successful!</h2>
+      <p style="color:var(--gray); font-size:0.9rem; margin-bottom:1.5rem">Your credit card balance has been updated.</p>
+      
+      <div style="background:var(--light); border-radius:16px; padding:1.25rem; margin-bottom:1.8rem; text-align:left; display:flex; flex-direction:column; gap:0.6rem">
+        <div class="pay-summary-row"><span>Transaction ID</span><span id="sTxnId">----</span></div>
+        <div class="pay-summary-row"><span>Amount Paid</span><span id="sAmount">₹0</span></div>
+        <div class="pay-summary-row"><span>Card Used</span><span id="sCard">----</span></div>
+        <div class="pay-summary-row"><span>New Statement Balance</span><span id="sBalance" style="color:var(--success)">₹0</span></div>
+        <div class="pay-summary-row"><span>Date & Time</span><span id="sDateTime" style="font-size:0.75rem">----</span></div>
+      </div>
+      
+      <button class="pay-btn" onclick="location.reload()" style="width:100%; padding:0.9rem">Back to Statements</button>
+    </div>
+  </div>
+
+  <!-- Success Modal for Grace Period -->
+  <div id="graceModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:10000; align-items:center; justify-content:center">
+    <div style="background:var(--white); border-radius:24px; padding:2.5rem; text-align:center; max-width:400px; width:90%; box-shadow:0 20px 50px rgba(0,0,0,0.2)">
+      <div style="width:72px; height:72px; background:rgba(0,179,138,0.1); color:var(--success); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 1.5rem">
+        <i class="fas fa-check"></i>
+      </div>
+      <h2 style="font-size:1.3rem; margin-bottom:0.5rem">Request Submitted</h2>
+      <p id="graceModalMsg" style="color:var(--gray); font-size:0.9rem; line-height:1.6; margin-bottom:1.5rem"></p>
+      <button class="pay-btn" onclick="document.getElementById('graceModal').style.display='none'" style="width:100%; padding:0.8rem">Great, Thanks!</button>
+    </div>
+  </div>
+
+<script>
+  const token=localStorage.getItem('token');
+  if(!token)window.location.href='login.html';
+  const fmt=n=>'₹'+parseFloat(n||0).toLocaleString('en-IN');
+  const fmtD=s=>s?new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'N/A';
+  function daysLeft(s){if(!s)return null;return Math.ceil((new Date(s)-new Date())/(1000*86400));}
+  
+  let globalCards = [];
+  let currentBillingCycle = { start: null, end: null, dueDate: null };
+  let selectedGraceCardId = null;
+
+  async function loadStatements() {
+    try {
+      const [cardsRes, transRes] = await Promise.all([
+        fetch('/api/cards', { headers: { Authorization: 'Bearer ' + token } }),
+        fetch('/api/payments/history', { headers: { Authorization: 'Bearer ' + token } })
+      ]);
+
+      if (!cardsRes.ok || !transRes.ok) throw new Error('Failed to load data');
+      
+      const cards = await cardsRes.json();
+      globalCards = cards;
+      const transactions = await transRes.json();
+      
+      document.getElementById('loader').style.display = 'none';
+      
+      if (!cards || cards.length === 0) {
+        document.getElementById('stmtGrid').innerHTML = '<div style="padding:2rem;text-align:center;color:var(--gray)">No cards found. Go to My Cards to add one.</div>';
+        return;
+      }
+      
+      // Billing Cycle Logic (1st to last of current month)
+      const now = new Date();
+      const cycleStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0); 
+      const dueDate = new Date(cycleEnd.getTime() + (15 * 24 * 60 * 60 * 1000)); // 15 days later
+      
+      currentBillingCycle = { start: cycleStart, end: cycleEnd, dueDate: dueDate };
+
+      let grandTotalDue = 0;
+      let grandMinDue = 0;
+
+      document.getElementById('stmtGrid').innerHTML = cards.map((c, i) => {
+        const cardTx = transactions.filter(t => 
+          t.bank_card_id === c.id && 
+          new Date(t.created_at) >= cycleStart && 
+          new Date(t.created_at) <= cycleEnd &&
+          (t.status === 'success' || t.status === 'completed')
+        );
+
+        const totalDue = cardTx.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        const minDue = totalDue * 0.1;
+        const isDue = totalDue > 0;
+
+        grandTotalDue += totalDue;
+        grandMinDue += minDue;
+
+        return `
+          <div class="stmt-card">
+            <div class="stmt-header">
+              <div class="sh-left">
+                <h3>${(c.card_type || 'Visa').toUpperCase()} Card</h3>
+                <p>•••• •••• •••• ${c.last_four || '----'}</p>
+              </div>
+              <div class="sh-badge" style="background:${isDue?'rgba(253,178,77,0.1)':'rgba(0,179,138,0.1)'};color:${isDue?'var(--warning)':'var(--success)'}">
+                ${isDue ? 'Due' : 'Clear'}
+              </div>
+            </div>
+            <div class="stmt-body">
+              <div class="stmt-row">
+                <div class="sr-label"><i class="fas fa-calendar-alt"></i> Billing Cycle</div>
+                <div class="sr-val">${fmtD(cycleStart)} - ${fmtD(cycleEnd)}</div>
+              </div>
+              <div class="stmt-row">
+                <div class="sr-label"><i class="fas fa-exclamation-circle"></i> Due Date</div>
+                <div class="sr-val" style="color:var(--danger)">${fmtD(dueDate)}</div>
+              </div>
+              <div class="stmt-row" style="margin-top:0.5rem;padding-top:1rem;border-top:1px dashed var(--gray-light)">
+                <div class="sr-label">Statement Balance</div>
+                <div class="sr-val" style="font-size:1.2rem">${fmt(totalDue)}</div>
+              </div>
+            </div>
+            <div class="stmt-footer">
+              <div class="sf-min">Min Due: <span>${fmt(minDue)}</span></div>
+              <div style="display:flex; gap:0.5rem">
+                ${isDue ? `<button class="pay-btn" onclick="openRepaymentModal('${c.id}', ${totalDue}, ${minDue})">Pay Now</button>` : ''}
+                ${isDue ? `<button class="pay-btn" style="background:var(--secondary)" onclick="setupGraceRequest('${c.id}', ${totalDue})">Grace Period</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('kpiRow').style.display = 'grid';
+      document.getElementById('kTotalDue').textContent = fmt(grandTotalDue);
+      document.getElementById('kMinDue').textContent = fmt(grandMinDue);
+      
+      const dL = daysLeft(dueDate);
+      document.getElementById('kDeadline').textContent = dL > 0 ? `${dL} days left` : (dL === 0 ? 'Today' : 'Overdue');
+      if (dL <= 0) document.getElementById('kDeadline').style.color = 'var(--danger)';
+      
+      renderGraceHistory();
+
+    } catch (e) {
+      console.error(e);
+      document.getElementById('loader').innerHTML = '<div style="text-align:center;color:var(--danger)">Failed to load statements.</div>';
+    }
+  }
+
+  /* ──── GRACE PERIOD LOGIC ──── */
+  function setupGraceRequest(cardId, amount) {
+    // Fix: Use loose equality (==) for string vs number ID comparison
+    const card = globalCards.find(c => c.id == cardId);
+    if (!card) return;
+
+    // Check if already requested for this card + cycle
+    const requests = JSON.parse(localStorage.getItem('nexus_grace_requests') || '[]');
+    const cycleToken = currentBillingCycle.start.toISOString();
+    const existing = requests.find(r => r.cardId == cardId && r.cycle === cycleToken);
+    
+    if (existing) {
+        alert("You have already submitted a grace period request for this billing cycle.");
+        return;
+    }
+
+    selectedGraceCardId = cardId;
+    document.getElementById('graceSection').style.display = 'flex';
+    document.getElementById('gCardLabel').textContent = `${(card.card_type||'Visa').toUpperCase()} •••• ${card.last_four}`;
+    document.getElementById('gDueAmount').textContent = fmt(amount);
+    document.getElementById('gDueDate').textContent = fmtD(currentBillingCycle.dueDate);
+    
+    // Scroll to section
+    document.getElementById('graceSection').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function submitGraceRequest() {
+    const days = parseInt(document.getElementById('graceDays').value);
+    const reason = document.getElementById('graceReason').value.trim();
+    
+    if (days < 1 || days > 15) { alert("Please request between 1 and 15 days."); return; }
+    if (!reason) { alert("Please provide a reason for the request."); return; }
+
+    const requestId = 'GRACE' + Math.floor(1000 + Math.random() * 9000);
+    const originalDueDate = currentBillingCycle.dueDate;
+    const newDate = new Date(originalDueDate.getTime() + (days * 24 * 60 * 60 * 1000));
+    
+    const card = globalCards.find(c => c.id == selectedGraceCardId);
+    const dueAmount = document.getElementById('gDueAmount').textContent;
+
+    const request = {
+        requestId,
+        cardId: selectedGraceCardId,
+        cardLabel: `${(card.card_type||'Visa').toUpperCase()} **** ${card.last_four}`,
+        dueAmount,
+        originalDueDate: originalDueDate.toISOString(),
+        requestedDays: days,
+        newDueDate: newDate.toISOString(),
+        reason,
+        status: 'Pending',
+        requestedAt: new Date().toISOString(),
+        cycle: currentBillingCycle.start.toISOString()
+    };
+
+    const requests = JSON.parse(localStorage.getItem('nexus_grace_requests') || '[]');
+    requests.unshift(request);
+    localStorage.setItem('nexus_grace_requests', JSON.stringify(requests));
+
+    // Show success modal
+    document.getElementById('graceModalMsg').innerHTML = `
+        Your request for card <b>${request.cardLabel}</b> has been submitted.<br><br>
+        New Proposed Due Date: <b>${fmtD(newDate)}</b><br>
+        Status: <b>Pending Approval</b>
+    `;
+    document.getElementById('graceModal').style.display = 'flex';
+    
+    // Reset and hide form
+    document.getElementById('graceForm').reset();
+    document.getElementById('graceSection').style.display = 'none';
+    renderGraceHistory();
+  }
+
+  function renderGraceHistory() {
+    const requests = JSON.parse(localStorage.getItem('nexus_grace_requests') || '[]');
+    const body = document.getElementById('graceHistoryBody');
+    
+    if (requests.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" style="padding:2rem; text-align:center; color:var(--gray)">No previous requests</td></tr>';
+        return;
+    }
+
+    body.innerHTML = requests.map(r => `
+        <tr style="border-bottom:1px solid var(--gray-light)">
+            <td style="padding:1rem 0.5rem; font-weight:600">${r.requestId}</td>
+            <td style="padding:1rem 0.5rem">${r.requestedDays} days</td>
+            <td style="padding:1rem 0.5rem">${fmtD(r.newDueDate)}</td>
+            <td style="padding:1rem 0.5rem">
+                <span style="background:rgba(253,178,77,0.1); color:var(--warning); padding:0.2rem 0.6rem; border-radius:10px; font-weight:700">
+                    ${r.status}
+                </span>
+            </td>
+        </tr>
+    `).join('');
+  }
+
+  /* ──── REPAYMENT LOGIC ──── */
+  let selectedRepayCardId = null;
+  let currentStatementBalance = 0;
+
+  function openRepaymentModal(cardId, balance, minDue) {
+    const card = globalCards.find(c => c.id == cardId);
+    if (!card) return;
+
+    selectedRepayCardId = cardId;
+    currentStatementBalance = balance;
+    
+    document.getElementById('pCardLabel').textContent = `${(card.card_type||'Visa').toUpperCase()} •••• ${card.last_four}`;
+    document.getElementById('pBalance').textContent = fmt(balance);
+    document.getElementById('pMinDue').textContent = fmt(minDue);
+    document.getElementById('pAmount').value = balance; // Default to full pay
+    document.getElementById('pAmount').max = balance;
+    
+    document.getElementById('repayModal').classList.add('open');
+  }
+
+  function closeRepaymentModal() {
+    document.getElementById('repayModal').classList.remove('open');
+    document.getElementById('repayForm').reset();
+  }
+
+  async function processRepayment() {
+    const amount = parseFloat(document.getElementById('pAmount').value);
+    const mpin = document.getElementById('pMpin').value;
+    const method = document.getElementById('pMethod').value;
+
+    if (amount <= 0 || amount > currentStatementBalance) {
+        alert("Please enter a valid amount (up to the statement balance).");
+        return;
+    }
+    if (mpin.length !== 4) {
+        alert("Please enter a 4-digit MPIN.");
+        return;
+    }
+
+    // Process payment (Simulated backend update + localStorage log)
+    try {
+        const card = globalCards.find(c => c.id == selectedRepayCardId);
+        const txnId = 'REPAY' + Math.floor(100000 + Math.random() * 900000);
+        const now = new Date();
+        const dateTimeStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + 
+                            now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        // Update Card Available Balance in localStorage
+        const allCards = JSON.parse(localStorage.getItem('nexus_cards') || '[]');
+        const updatedCards = allCards.map(c => {
+            if (c.id == selectedRepayCardId) {
+                const limit = parseFloat(c.credit_limit || 100000);
+                const oldUsed = parseFloat(c.used_amount || 0);
+                const newUsed = Math.max(0, oldUsed - amount);
+                const newBalance = limit - newUsed;
+                return { ...c, used_amount: newUsed, available_balance: newBalance };
+            }
+            return c;
+        });
+        localStorage.setItem('nexus_cards', JSON.stringify(updatedCards));
+
+        // Add to global transactions
+        const transRecord = {
+            id: Date.now(),
+            transaction_id: txnId,
+            bank_card_id: selectedRepayCardId,
+            amount: amount,
+            category: 'Repayment',
+            status: 'success',
+            created_at: now.toISOString(),
+            purpose: `Repayment via ${method}`,
+            recipient_account: 'NEXUS PAY REPAYMENT'
+        };
+        const allTrans = JSON.parse(localStorage.getItem('nexus_transactions') || '[]');
+        allTrans.unshift(transRecord);
+        localStorage.setItem('nexus_transactions', JSON.stringify(allTrans));
+
+        // Update successful popup fields
+        document.getElementById('sTxnId').textContent = txnId;
+        document.getElementById('sAmount').textContent = fmt(amount);
+        document.getElementById('sCard').textContent = `•••• ${card.last_four}`;
+        document.getElementById('sBalance').textContent = fmt(currentStatementBalance - amount);
+        document.getElementById('sDateTime').textContent = dateTimeStr;
+
+        closeRepaymentModal();
+        document.getElementById('repaySuccessModal').classList.add('open');
+        
+        // Add notification
+        if (typeof NexusNotif !== 'undefined') {
+            NexusNotif.add(`Repayment of ${fmt(amount)} for your ${card.card_type} card was successful.`, 'payment');
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert("Repayment failed. Please try again.");
+    }
+  }
+
+  loadStatements();
+</script>
+  <script src="sidebar.js"></script>
+</body>
+</html>

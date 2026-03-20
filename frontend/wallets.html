@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Nexus Pay — Wallets</title>
+  <link rel="icon" href="logo_nexus.png">   
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--primary:#1a4cff;--secondary:#7b3fe4;--success:#00b38a;--danger:#ff5e7c;--warning:#fdb24d;--gray:#6e7687;--gray-light:#e9ecf2;--light:#f5f7fd;--white:#fff;--dark:#121826;--gradient:linear-gradient(145deg,#1a4cff,#7b3fe4);--shadow-sm:0 4px 12px rgba(0,0,0,.04);--radius:16px}
+    body{font-family:'Inter',sans-serif;background:var(--light);color:var(--dark);min-height:100vh;display:flex}
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .topbar{background:var(--white);padding:1.25rem 2rem;border-bottom:1px solid var(--gray-light);box-shadow:var(--shadow-sm)}
+    .topbar h1{font-size:1.3rem;font-weight:800}.topbar p{color:var(--gray);font-size:.85rem;margin-top:.1rem}
+    .content{flex:1;overflow-y:auto;padding:2rem;display:flex;flex-direction:column;gap:1.5rem}
+    .wallet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.25rem}
+    .wallet-card{background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow-sm);transition:transform .2s,box-shadow .2s}
+    .wallet-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(26,76,255,.1)}
+    .wc-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+    .wc-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+    .wc-title{font-size:.95rem;font-weight:700}.wc-sub{font-size:.75rem;color:var(--gray)}
+    .wc-amount{font-size:1.65rem;font-weight:800;margin-bottom:1rem}
+    .wc-footer{display:flex;justify-content:space-between;align-items:center;padding-top:.85rem;border-top:1px solid var(--gray-light)}
+    .wc-tag{font-size:.72rem;font-weight:700;padding:.22rem .65rem;border-radius:20px}
+    .wc-change{font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:.3rem}
+    .summary-box{background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow-sm)}
+    .summary-box h3{font-size:.95rem;font-weight:700;margin-bottom:1rem}
+    .sum-row{display:flex;justify-content:space-between;padding:.65rem 0;border-bottom:1px solid var(--gray-light)}
+    .sum-row:last-child{border-bottom:none}
+    .sum-row span:first-child{color:var(--gray);font-size:.85rem}
+    .sum-row span:last-child{font-weight:700;font-size:.9rem}
+    @media(max-width:780px){.content{padding:1rem}}
+    
+    /* Shell layout for sidebar integration */
+    .shell { display: flex; width: 100%; min-height: 100vh; }
+    @media (min-width: 780px) {
+      .shell { height: 100vh; overflow: hidden; }
+      .main { flex: 1; height: 100vh; overflow-y: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+  <div class="main">
+    <div class="topbar"><h1>Wallets</h1><p>Overview of your digital balances and rewards</p></div>
+    <div class="content">
+      <div class="wallet-grid" id="walletGrid"></div>
+      <div class="summary-box">
+        <h3>Summary</h3>
+        <div class="sum-row"><span>Total Available Credit</span><span style="color:var(--success)" id="swCredit">—</span></div>
+        <div class="sum-row"><span>Reward Points</span><span style="color:var(--primary)" id="swRewards">—</span></div>
+        <div class="sum-row"><span>Total Credit Used</span><span id="swUsed">—</span></div>
+        <div class="sum-row"><span>Number of Cards</span><span id="swCards">—</span></div>
+      </div>
+    </div>
+  </div>
+  </div>
+<script>
+  const token=localStorage.getItem('token');
+  if(!token)window.location.href='login.html';
+  const fmt=n=>'₹'+parseFloat(n||0).toLocaleString('en-IN');
+  async function loadWallets() {
+    try {
+      const [cardsRes, userRes, transRes] = await Promise.all([
+        fetch('/api/cards', { headers: { Authorization: 'Bearer ' + token } }),
+        fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } }),
+        fetch('/api/payments/history', { headers: { Authorization: 'Bearer ' + token } })
+      ]);
+
+      if (!cardsRes.ok || !userRes.ok || !transRes.ok) {
+        console.error('API Error:', { cards: cardsRes.status, user: userRes.status, trans: transRes.status });
+        throw new Error('Failed to load data');
+      }
+      
+      const cards = await cardsRes.json();
+      const user = await userRes.json();
+      const transactions = await transRes.json();
+      
+      console.log('Wallet Data Loaded:', { cardsCount: cards.length, salary: user.salary });
+      renderWallets(cards, user, transactions);
+    } catch (e) {
+      console.error('Wallet Load Error:', e);
+      document.getElementById('walletGrid').innerHTML = `
+        <div style="padding:3rem;text-align:center;grid-column:1/-1;">
+          <i class="fas fa-exclamation-circle" style="font-size:3rem;color:var(--danger);margin-bottom:1rem;"></i>
+          <p style="color:var(--gray)">Failed to load wallet data. Please try refreshing.</p>
+        </div>`;
+    }
+  }
+
+  function renderWallets(cards, user, transactions) {
+    const grid = document.getElementById('walletGrid');
+    const userSalary = parseFloat(user.salary) || 0;
+    const creditLimitPerCard = userSalary * 3;
+    
+    let totalAvail = 0;
+    let totalLimit = 0;
+    let totalSpent = 0;
+    
+    const settingsStr = localStorage.getItem('nexus_user_settings');
+    let privacy = { hideCards: true, hideBalance: false };
+    try { if(settingsStr) privacy = JSON.parse(settingsStr).privacy; } catch(e){}
+
+    const cardHtml = cards.map((c, i) => {
+      const cardTransactions = (transactions || []).filter(t => t.bank_card_id === c.id && (t.status === 'success' || t.status === 'completed'));
+      const calculatedUsed = cardTransactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+      const used = parseFloat(c.used_amount !== undefined ? c.used_amount : calculatedUsed);
+      const limit = parseFloat(c.credit_limit || (userSalary > 0 ? creditLimitPerCard : (parseFloat(c.available_balance || 0) + used)));
+      const finalBalance = limit - used;
+      
+      totalAvail += finalBalance;
+      totalLimit += limit;
+      totalSpent += used;
+      
+      const displayBalance = privacy.hideBalance ? '••••••' : fmt(finalBalance);
+      const displayCardNum = privacy.hideCards ? `**** ${c.last_four || '----'}` : `4242 ... ${c.last_four || '----'}`;
+
+      return `
+        <div class="wallet-card">
+          <div class="wc-header">
+            <div class="wc-icon" style="background:${i%2===0?'rgba(26,76,255,0.1)':'rgba(123,63,228,0.1)'};color:${i%2===0?'var(--primary)':'var(--secondary)'}">
+              <i class="fas fa-credit-card"></i>
+            </div>
+            <div>
+              <div class="wc-title">${(c.card_type || 'Visa').toUpperCase()} Card</div>
+              <div class="wc-sub">${displayCardNum}</div>
+            </div>
+          </div>
+          <div class="wc-amount">${displayBalance}</div>
+          <div class="wc-footer">
+            <div class="wc-tag" style="background:rgba(0,179,138,0.1);color:var(--success)">Active</div>
+            <div class="wc-change" style="color:var(--gray)">Limit: ${fmt(limit)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    // Dynamic Rewards: 1 point for every ₹100 spent
+    const rewardPoints = Math.floor(totalSpent / 100);
+    const rewardsHtml = `
+      <div class="wallet-card">
+        <div class="wc-header">
+          <div class="wc-icon" style="background:rgba(253,178,77,0.1);color:var(--warning)">
+            <i class="fas fa-star"></i>
+          </div>
+          <div>
+            <div class="wc-title">Rewards Points</div>
+            <div class="wc-sub">Nexus Loyalty</div>
+          </div>
+        </div>
+        <div class="wc-amount">${rewardPoints.toLocaleString()} <span style="font-size:0.9rem;color:var(--gray);font-weight:600">pts</span></div>
+        <div class="wc-footer">
+          <div class="wc-tag" style="background:rgba(26,76,255,0.1);color:var(--primary)">Premium</div>
+          <div class="wc-change" style="color:var(--success)"><i class="fas fa-arrow-up"></i> Dynamic</div>
+        </div>
+      </div>
+    `;
+    
+    grid.innerHTML = (cardHtml || '<p style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--gray);">No cards linked.</p>') + rewardsHtml;
+    
+    document.getElementById('swCredit').textContent = fmt(totalAvail);
+    document.getElementById('swRewards').textContent = rewardPoints.toLocaleString() + ' pts';
+    document.getElementById('swUsed').textContent = fmt(totalSpent);
+    document.getElementById('swCards').textContent = cards.length;
+  }
+
+  loadWallets();
+</script>
+  <script src="sidebar.js"></script>
+</body>
+</html>

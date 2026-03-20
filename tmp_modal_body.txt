@@ -1,0 +1,55 @@
+            <div class="modal-body">
+                <!-- Card Preview Area -->
+                <div id="addCardPreviewContainer" style="margin-bottom: 2rem;">
+                    <div class="animated-card card-1" style="animation: none; cursor: default; box-shadow: var(--shadow-md); min-height: 190px;">
+                        <div class="card-top">
+                            <div class="card-chip"></div>
+                            <span class="card-badge" id="previewCardType">VISA</span>
+                        </div>
+                        <div class="card-main">
+                            <div class="balance-info">
+                                <div class="label">Available Balance</div>
+                                <div class="value">₹0</div>
+                            </div>
+                            <div class="score-container">
+                                <svg viewBox="0 0 70 70">
+                                    <circle class="score-circle-bg" cx="35" cy="35" r="30"></circle>
+                                    <circle class="score-circle-fill" cx="35" cy="35" r="30" stroke-dashoffset="20" style="stroke-dashoffset: 20; stroke: #ffd966;"></circle>
+                                </svg>
+                                <div class="score-text">820<small>/900</small></div>
+                            </div>
+                        </div>
+                        <div class="card-number-row" id="previewCardNumber">•••• •••• •••• ••••</div>
+                        <div class="card-limit-row">
+                            <span>Limit: ₹0</span>
+                            <span>Used: ₹0</span>
+                        </div>
+                        <div class="card-footer">
+                            <span id="previewCardHolder">YOUR NAME</span>
+                            <span id="previewExpiry">MM/YY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="addCardForm">
+                    <div class="form-group">
+                        <label>Card Holder Name</label>
+                        <input type="text" id="addCardHolder" placeholder="e.g. JOHN DOE" required style="width:100%; padding:0.8rem; border-radius:12px; border:1px solid var(--gray-light);">
+                    </div>
+                    <div class="form-group">
+                        <label>Card Number</label>
+                        <input type="text" id="addCardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required style="width:100%; padding:0.8rem; border-radius:12px; border:1px solid var(--gray-light);">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Expiry (MM/YY)</label>
+                            <input type="text" id="addCardExpiry" placeholder="MM/YY" maxlength="5" required style="width:100%; padding:0.8rem; border-radius:12px; border:1px solid var(--gray-light);">
+                        </div>
+                        <div class="form-group">
+                            <label>CVV</label>
+                            <input type="password" id="addCardCvv" placeholder="***" maxlength="3" required style="width:100%; padding:0.8rem; border-radius:12px; border:1px solid var(--gray-light);">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem; padding: 1rem;">Add Card</button>
+                </form>
+            </div>

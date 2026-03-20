@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Nexus Pay - Secure Login</title>
+    <link rel="icon" href="logo_nexus.png">   
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3730a3;
+            --primary-light: #4895ef;
+            --secondary: #7209b7;
+            --accent: #f72585;
+            --success: #06d6a0;
+            --warning: #ffd166;
+            --danger: #ef476f;
+            --dark: #1a1a2e;
+            --gray-dark: #4a4a68;
+            --gray: #6b7280;
+            --gray-light: #e5e7eb;
+            --light: #f9fafb;
+            --white: #ffffff;
+            --gradient: linear-gradient(135deg, #4361ee 0%, #7209b7 100%);
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .nexus-loader {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .nexus-loader::before,
+        .nexus-loader::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--primary);
+            border-bottom-color: var(--secondary);
+            animation: spin 1.5s linear infinite;
+        }
+
+        .nexus-loader::after {
+            border-top-color: var(--secondary);
+            border-bottom-color: var(--primary);
+            animation-duration: 2s;
+            animation-direction: reverse;
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-top: 1rem;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        /* Main Container */
+        .login-container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--white);
+            border-radius: 24px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 600px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        /* Left Side - Image (Now on Left) */
+        .login-left {
+            background: linear-gradient(135deg, #4361ee 0%, #7209b7 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><circle cx="50" cy="50" r="40" fill="none" stroke="white" stroke-width="2"/><circle cx="50" cy="50" r="20" fill="none" stroke="white" stroke-width="2"/></svg>') repeat;
+            background-size: 100px 100px;
+            animation: moveBackground 20s linear infinite;
+        }
+
+        .image-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 2rem;
+            color: var(--white);
+        }
+
+        .image-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: float 3s ease-in-out infinite;
+            margin-bottom: 2rem;
+        }
+
+        .image-text h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .image-text p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            text-align: left;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .feature-list li {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .feature-list li i {
+            color: var(--success);
+        }
+
+        /* Right Side - Login Form (Now on Right) */
+        .login-right {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            background: var(--white);
+        }
+
+        /* Logo */
+        .logo-container {
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: var(--gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.5rem;
+            font-weight: bold;
+            transform: rotate(45deg);
+            transition: transform 0.3s;
+        }
+
+        .logo-icon span {
+            transform: rotate(-45deg);
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-tagline {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            margin-left: 3.75rem;
+        }
+
+        /* Welcome Text */
+        .welcome-text {
+            margin-bottom: 2rem;
+        }
+
+        .welcome-text h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-text p {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        /* Auth Tabs */
+        .auth-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: var(--light);
+            padding: 0.5rem;
+            border-radius: 50px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 50px;
+        }
+
+        .auth-tab.active {
+            background: var(--white);
+            color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .auth-tab i {
+            margin-right: 0.5rem;
+        }
+
+        /* Forms */
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.5rem;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+        }
+
+        .form-group input.error {
+            border-color: var(--danger);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: color 0.3s;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+
+        /* Remember & Forgot */
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .forgot-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Login Button */
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient);
+            color: var(--white);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .login-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Social Login */
+        .social-login {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .social-login p {
+            color: var(--gray);
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .social-login p::before,
+        .social-login p::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30%;
+            height: 1px;
+            background: var(--gray-light);
+        }
+
+        .social-login p::before {
+            left: 0;
+        }
+
+        .social-login p::after {
+            right: 0;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .social-icon {
+            width: 45px;
+            height: 45px;
+            border: 2px solid var(--gray-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .social-icon:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Sign Up Link */
+        .signup-link {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .signup-link a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: slideInDown 0.3s ease-out;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: rgba(6, 214, 160, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 71, 111, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes moveBackground {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 100px 100px;
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes dots {
+            0%, 20% {
+                content: '';
+            }
+            40% {
+                content: '.';
+            }
+            60% {
+                content: '..';
+            }
+            80%, 100% {
+                content: '...';
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .login-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+
+            .login-left {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-right {
+                padding: 2rem 1.5rem;
+            }
+
+            .welcome-text h2 {
+                font-size: 1.5rem;
+            }
+
+            .auth-tabs {
+                flex-direction: column;
+                border-radius: var(--border-radius);
+            }
+
+            .auth-tab {
+                width: 100%;
+            }
+
+            .form-options {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .social-icons {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="nexus-loader"></div>
+            <div class="loading-text">
+                <span>Please wait</span>
+                <span class="loading-dots"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <!-- Left Side - Image (Now on Left) -->
+        <div class="login-left">
+            <div class="image-overlay"></div>
+            <div class="image-content">
+                <img src="logo.png" alt="Nexus Pay Dashboard" loading="lazy">
+                <div class="image-text">
+                    <h3>Secure Payments, Instantly</h3>
+                    <p>Join 1M+ businesses using Nexus Pay</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check-circle"></i> Instant transaction processing</li>
+                        <li><i class="fas fa-check-circle"></i> Bank-level security</li>
+                        <li><i class="fas fa-check-circle"></i> 24/7 fraud monitoring</li>
+                        <li><i class="fas fa-check-circle"></i> Global payment acceptance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Login Form (Now on Right) -->
+        <div class="login-right">
+            <!-- Logo -->
+            <div class="logo-container">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">
+                        <span>N</span>
+                    </div>
+                    <span class="logo-text">Nexus Pay</span>
+                </a>
+                <div class="logo-tagline">Secure. Fast. Reliable.</div>
+            </div>
+
+            <!-- Welcome Text -->
+            <div class="welcome-text">
+                <h2>Welcome back</h2>
+                <p>Sign in to your account to continue</p>
+            </div>
+
+            <!-- Alert Message -->
+            <div id="alertMessage" class="alert"></div>
+
+            <!-- Auth Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="password">
+                    <i class="fas fa-lock"></i> Password
+                </button>
+                <button class="auth-tab" data-tab="mpin">
+                    <i class="fas fa-key"></i> MPIN
+                </button>
+            </div>
+
+            <!-- Password Login Form -->
+            <form id="passwordForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" id="email" placeholder="Enter your email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" placeholder="Enter your password" required>
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('password')"></i>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox"> Remember me
+                    </label>
+                    <a href="#" class="forgot-link">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="login-btn" id="passwordLoginBtn">
+                    <span>Sign In with Password</span>
+                </button>
+            </form>
+
+            <!-- MPIN Login Form -->
+            <form id="mpinForm" class="auth-form">
+                <div class="form-group">
+                    <label for="mpin-email">Email Address</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" id="mpin-email" placeholder="Enter your email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mpin">MPIN (4-6 digits)</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="password" id="mpin" maxlength="6" pattern="\d*" placeholder="Enter your MPIN" required>
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('mpin')"></i>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox"> Remember me
+                    </label>
+                    <a href="#" class="forgot-link">Forgot MPIN?</a>
+                </div>
+
+                <button type="submit" class="login-btn" id="mpinLoginBtn">
+                    <span>Sign In with MPIN</span>
+                </button>
+            </form>
+
+            <!-- Social Login -->
+            <div class="social-login">
+                <p>Or continue with</p>
+                <div class="social-icons">
+                    <a href="#" class="social-icon"><i class="fab fa-google"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-apple"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+
+            <!-- Sign Up Link -->
+            <div class="signup-link">
+                <p>Don't have an account? <a href="register.html">Create Account</a></p>
+            </div>
+        </div>
+    </div>
+<!-- Your closing divs from login container ... -->
+
+<script>
+    // Show/Hide Loading Overlay
+    function showLoading() {
+        document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    // Toggle Password Visibility
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling;
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Show Alert Message
+    function showAlert(message, type) {
+        const alert = document.getElementById('alertMessage');
+        alert.textContent = message;
+        alert.className = `alert alert-${type} show`;
+        setTimeout(() => alert.classList.remove('show'), 3000);
+    }
+
+  
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.auth-tab');
+        const forms = {
+            password: document.getElementById('passwordForm'),
+            mpin: document.getElementById('mpinForm')
+        };
+        const passwordBtn = document.getElementById('passwordLoginBtn');
+        const mpinBtn = document.getElementById('mpinLoginBtn');
+
+        // Switch between tabs
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                Object.values(forms).forEach(f => f.classList.remove('active'));
+                forms[tab.dataset.tab].classList.add('active');
+            });
+        });
+
+        // Password Login
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            if (!email || !password) { showAlert('Please fill in all fields', 'error'); return; }
+            if (!isValidEmail(email)) { showAlert('Please enter a valid email', 'error'); return; }
+
+            showLoading();
+            passwordBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const result = await res.json();
+                hideLoading();
+                passwordBtn.disabled = false;
+
+                if (res.ok && result.token) {
+                    localStorage.setItem('token', result.token);
+                    if (result.user) {
+                        localStorage.setItem('loggedInUser', JSON.stringify(result.user));
+                        localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    }
+                    showAlert('Login successful! Redirecting...', 'success');
+                    setTimeout(() => window.location.href = 'dashboard.html', 1000);
+                } else {
+                    showAlert(result.message || 'Login failed', 'error');
+                }
+            } catch (err) {
+                hideLoading();
+                passwordBtn.disabled = false;
+                showAlert('Server not reachable', 'error');
+            }
+        });
+
+        // MPIN Login
+        document.getElementById('mpinForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('mpin-email').value;
+            const mpin = document.getElementById('mpin').value;
+            if (!email || !mpin) { showAlert('Please fill in all fields', 'error'); return; }
+            if (!isValidEmail(email)) { showAlert('Please enter a valid email', 'error'); return; }
+            if (!/^\d{4,6}$/.test(mpin)) { showAlert('MPIN must be 4-6 digits', 'error'); return; }
+
+            showLoading();
+            mpinBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, mpin, method: 'mpin' })
+                });
+                const result = await res.json();
+                hideLoading();
+                mpinBtn.disabled = false;
+
+                if (res.ok && result.token) {
+                    localStorage.setItem('token', result.token);
+                    if (result.user) localStorage.setItem('loggedInUser', JSON.stringify(result.user));
+                    showAlert('Login successful! Redirecting...', 'success');
+                    setTimeout(() => window.location.href = 'dashboard.html', 1000);
+                } else {
+                    showAlert(result.message || 'Login failed', 'error');
+                }
+            } catch (err) {
+                hideLoading();
+                mpinBtn.disabled = false;
+                showAlert('Server not reachable', 'error');
+            }
+        });
+
+    
+        
+
+        // Validate email
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        // Restrict MPIN input
+        document.getElementById('mpin').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    });
+</script>
+    
+</body>
+</html>

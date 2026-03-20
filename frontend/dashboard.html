@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Nexus Pay · Mobile Dashboard</title>
+    <link rel="icon" href="logo_nexus.png">   
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a4cff;
+            --primary-dark: #0e3ad0;
+            --primary-light: #4a7cff;
+            --secondary: #7b3fe4;
+            --accent: #ff5e9c;
+            --success: #00b38a;
+            --warning: #fdb24d;
+            --danger: #ff5e7c;
+            --dark: #121826;
+            --gray-dark: #2f3545;
+            --gray: #6e7687;
+            --gray-light: #e9ecf2;
+            --light: #f5f7fd;
+            --white: #ffffff;
+            --gradient: linear-gradient(145deg, #1a4cff, #7b3fe4);
+            --card1-gradient: linear-gradient(145deg, #1e2b4f, #162b4d);
+            --card2-gradient: linear-gradient(145deg, #283b5e, #1d3355);
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.12);
+            --border-radius: 20px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light);
+            min-height: 100vh;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+
+        /* Main Content - Mobile Optimized */
+        .main-content {
+            padding: 1.2rem 1rem;
+            background: var(--light);
+            max-width: 100%;
+        }
+
+        /* Welcome Row - Mobile */
+        .welcome-row {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .welcome h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .welcome p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        .date-badge {
+            background: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+        }
+
+        /* Cards - Mobile Optimized */
+        .cards-row {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            margin-bottom: 1.8rem;
+        }
+
+        .animated-card {
+            background: var(--card1-gradient);
+            border-radius: 24px;
+            padding: 1.4rem;
+            color: white;
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+            animation: gentleFloat 5s infinite ease-in-out;
+            width: 100%;
+        }
+
+        .animated-card:nth-child(2) {
+            background: var(--card2-gradient);
+        }
+
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .card-chip {
+            width: 40px;
+            height: 28px;
+            background: linear-gradient(145deg, #cfb27c, #b39264);
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .card-chip::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 5px;
+            width: 10px;
+            height: 8px;
+            background: rgba(255,255,200,0.7);
+            border-radius: 2px 6px 3px 3px;
+        }
+
+        .card-badge {
+            background: rgba(255,255,255,0.15);
+            padding: 0.25rem 0.9rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .card-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.8rem 0;
+        }
+
+        .balance-info .label {
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+
+        .balance-info .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        /* Circular Score - Mobile */
+        .score-container {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+
+        .score-container svg {
+            width: 60px;
+            height: 60px;
+        }
+
+        .score-circle-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.2);
+            stroke-width: 5;
+        }
+
+        .score-circle-fill {
+            fill: none;
+            stroke: #ffd966;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 157;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .score-text small {
+            font-size: 0.45rem;
+            opacity: 0.7;
+            display: block;
+        }
+
+        .card-number-row {
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            letter-spacing: 1.5px;
+            margin: 0.8rem 0;
+        }
+
+        .card-limit-row {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.3);
+            border-radius: 30px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            margin: 0.8rem 0;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        /* Stats Grid - Mobile */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 18px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .stat-icon.primary { background: rgba(26,76,255,0.08); color: var(--primary); }
+        .stat-icon.success { background: rgba(0,179,138,0.08); color: var(--success); }
+        .stat-icon.warning { background: rgba(253,178,77,0.08); color: #cc7f2a; }
+        .stat-icon.danger { background: rgba(255,94,124,0.08); color: var(--danger); }
+
+        .stat-info h3 {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--gray);
+        }
+
+        .stat-info p {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1.2;
+        }
+
+        /* Quick Actions - Mobile */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 1.8rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.8rem 0.5rem;
+            background: white;
+            border: 1px solid var(--gray-light);
+            border-radius: 30px;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            width: 100%;
+        }
+
+        .action-btn i {
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Section Title - Mobile */
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .section-title h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .view-all {
+            color: var(--primary);
+            font-weight: 500;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        /* Transactions - Mobile */
+        .transactions-list {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .transaction-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .transaction-icon.success { background: rgba(0,179,138,0.1); color: var(--success); }
+        .transaction-icon.warning { background: rgba(253,178,77,0.1); color: #b26000; }
+        .transaction-icon.primary { background: rgba(26,76,255,0.1); color: var(--primary); }
+
+        .transaction-details {
+            min-width: 0;
+        }
+
+        .transaction-details h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .transaction-details p {
+            font-size: 0.7rem;
+            color: var(--gray);
+        }
+
+        .transaction-amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+
+        .status-badge {
+            grid-column: 1 / -1;
+            padding: 0.2rem 1rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(0,179,138,0.1);
+            color: var(--success);
+            text-align: center;
+            width: fit-content;
+        }
+
+        .status-pending { background: rgba(253,178,77,0.1); color: #b26000; }
+
+        /* Modal - Mobile Optimized */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 28px 28px 0 0;
+            width: 100%;
+            max-width: 100%;
+            padding: 1.8rem 1.5rem;
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--gray);
+            line-height: 1;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 1.5px solid var(--gray-light);
+            border-radius: 16px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        /* Tablet Adjustments */
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 2rem;
+            }
+
+            .welcome-row {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .cards-row {
+                flex-direction: row;
+            }
+
+            .animated-card {
+                flex: 1;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .modal-content {
+                max-width: 480px;
+                border-radius: 28px;
+                margin: auto;
+            }
+
+            .modal {
+                align-items: center;
+            }
+        }
+
+        /* Desktop Styles */
+        @media (min-width: 1024px) {
+            .menu-btn {
+                display: none;
+            }
+
+            .mobile-sidebar {
+                display: none;
+            }
+
+            .sidebar-overlay {
+                display: none !important;
+            }
+        }
+
+        @media (min-width: 780px) {
+            .shell {
+                display: flex;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            .navbar {
+                display: none;
+            }
+
+            .desktop-sidebar {
+                display: block;
+                position: sticky;
+                top: 0;
+                height: 100vh;
+                background: var(--white);
+                border-right: 1px solid var(--gray-light);
+                padding: 2rem 1.5rem;
+                box-shadow: 4px 0 12px rgba(0,0,0,0.02);
+            }
+
+            .main-content {
+                flex: 1;
+                overflow-y: auto;
+                height: 100vh;
+            }
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            animation: sectionFadeIn 0.3s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes sectionFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Additional Styles for New Sections */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .analytics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="content-section active">
+            <!-- Welcome Row -->
+            <div class="welcome-row">
+                <div class="welcome">
+                    <h1 id="greeting">Good evening, Ram 👋</h1>
+                    <p>Your finances at a glance</p>
+                </div>
+                <div class="date-badge">
+                    <i class="far fa-calendar-alt" style="margin-right:0.5rem;"></i> 26 Feb 2026
+                </div>
+            </div>
+
+            <!-- Cards -->
+            <div class="cards-row">
+                <!-- Credit Card 1 -->
+                <div class="animated-card" onclick="openModal('cardDetailsModal1')">
+                    <div class="card-top">
+                        <div class="card-chip"></div>
+                        <span class="card-badge">PRIME</span>
+                    </div>
+                    <div class="card-main">
+                        <div class="balance-info">
+                            <div class="label">Current Balance</div>
+                            <div class="value">₹0</div>
+                        </div>
+                        <div class="score-container">
+                            <svg viewBox="0 0 70 70">
+                                <circle class="score-circle-bg" cx="35" cy="35" r="30"></circle>
+                                <circle class="score-circle-fill" cx="35" cy="35" r="30" stroke-dashoffset="31.4" style="stroke-dashoffset: 31.4;"></circle>
+                            </svg>
+                            <div class="score-text">780<small>/900</small></div>
+                        </div>
+                    </div>
+                    <div class="card-number-row">1234 5678 9012 3456</div>
+                    <div class="card-limit-row">
+                        <span>Limit: ₹0</span>
+                        <span>Used: ₹0</span>
+                    </div>
+                    <div class="card-footer">
+                        <span>**** 3456</span>
+                        <span>12/27</span>
+                    </div>
+                </div>
+
+                <!-- Credit Card 2 -->
+                <div class="animated-card" onclick="openModal('cardDetailsModal2')">
+                    <div class="card-top">
+                        <div class="card-chip"></div>
+                        <span class="card-badge">ELITE</span>
+                    </div>
+                    <div class="card-main">
+                        <div class="balance-info">
+                            <div class="label">Current Balance</div>
+                            <div class="value">₹0</div>
+                        </div>
+                        <div class="score-container">
+                            <svg viewBox="0 0 70 70">
+                                <circle class="score-circle-bg" cx="35" cy="35" r="30"></circle>
+                                <circle class="score-circle-fill" cx="35" cy="35" r="30" stroke-dashoffset="17.45" style="stroke-dashoffset: 17.45;"></circle>
+                            </svg>
+                            <div class="score-text">820<small>/900</small></div>
+                        </div>
+                    </div>
+                    <div class="card-number-row">9876 5432 1098 7654</div>
+                    <div class="card-limit-row">
+                        <span>Limit: ₹0</span>
+                        <span>Used: ₹0</span>
+                    </div>
+                    <div class="card-footer">
+                        <span>**** 7654</span>
+                        <span>09/26</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon primary"><i class="fas fa-indian-rupee-sign"></i></div>
+                    <div class="stat-info">
+                        <h3>Total Balance</h3>
+                        <p id="statBalance">₹0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success"><i class="fas fa-arrow-up"></i></div>
+                    <div class="stat-info">
+                        <h3>Income</h3>
+                        <p id="statIncome">₹0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger"><i class="fas fa-arrow-down"></i></div>
+                    <div class="stat-info">
+                        <h3>Expenses</h3>
+                        <p id="statExpenses">₹0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning"><i class="fas fa-percent"></i></div>
+                    <div class="stat-info">
+                        <h3>Cashback</h3>
+                        <p id="statCashback">₹0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="action-btn" onclick="openModal('addCardModal')"><i class="fas fa-plus-circle"></i> Add Card</button>
+                <button class="action-btn" onclick="openModal('paymentModal')"><i class="fas fa-paper-plane"></i> Payment</button>
+                <button class="action-btn" onclick="openModal('mpinModal')"><i class="fas fa-key"></i> Change Salary</button>
+                <button class="action-btn" onclick="openModal('transferModal')"><i class="fas fa-exchange-alt"></i> Transfer</button>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="section-title">
+                <h2>Recent Transactions</h2>
+                <a href="transactions.html" class="view-all">View all <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="transactions-list" id="recentTransactionsList">
+                <!-- Transactions will be loaded dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal" id="addCardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Card</h3>
+                <button class="close-modal" onclick="closeModal('addCardModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Card Preview -->
+                <div id="addCardPreviewArea" style="margin-bottom: 2rem;">
+                    <div class="animated-card card-1" id="addCardVisual" style="animation: none; cursor: default; box-shadow: var(--shadow-md); min-height: 190px;">
+                        <div class="card-top">
+                            <div class="card-chip"></div>
+                            <span class="card-badge" id="previewCardType">VISA</span>
+                        </div>
+                        <div class="card-main">
+                            <div class="balance-info">
+                                <div class="label">Available Balance</div>
+                                <div class="value">₹0</div>
+                            </div>
+                            <div class="score-container">
+                                <svg viewBox="0 0 70 70">
+                                    <circle class="score-circle-bg" cx="35" cy="35" r="30"></circle>
+                                    <circle class="score-circle-fill" cx="35" cy="35" r="30" stroke-dashoffset="20" style="stroke-dashoffset: 20; stroke: #ffd966;"></circle>
+                                </svg>
+                                <div class="score-text">820<small>/900</small></div>
+                            </div>
+                        </div>
+                        <div class="card-number-row" id="previewCardNumber">•••• •••• •••• ••••</div>
+                        <div class="card-limit-row">
+                            <span>Limit: ₹0</span>
+                            <span>Used: ₹0</span>
+                        </div>
+                        <div class="card-footer">
+                            <span id="previewCardHolder">YOUR NAME</span>
+                            <span id="previewExpiry">MM/YY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="addCardForm">
+                    <div class="form-group">
+                        <label>Card Holder Name</label>
+                        <input type="text" id="addCardHolder" placeholder="e.g. JOHN DOE" required style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Card Number</label>
+                            <input type="text" id="addCardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                        </div>
+                        <div class="form-group">
+                            <label>Card Tier</label>
+                            <select id="addCardTier" style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                                <option value="PRIME">PRIME</option>
+                                <option value="ELITE">ELITE</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Expiry (MM/YY)</label>
+                            <input type="text" id="addCardExpiry" placeholder="MM/YY" maxlength="5" required style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                        </div>
+                        <div class="form-group">
+                            <label>CVV</label>
+                            <input type="password" id="addCardCvv" placeholder="***" maxlength="3" required style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Card</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Make Payment</h3>
+                <button class="close-modal" onclick="closeModal('paymentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="form-group">
+                        <label>Select Card</label>
+                        <select id="paymentCardSelect" class="form-control" style="width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--gray-light);" required>
+                            <option value="">Choose a card</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" id="paymentAmount" placeholder="Enter amount" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="paymentCategory" class="form-control" style="width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--gray-light);">
+                            <option value="Shopping">Shopping</option>
+                            <option value="Food">Food</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Beneficiary UPI</label>
+                        <input type="text" placeholder="example@okhdfcbank" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Pay Now</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="transferModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Transfer Money</h3>
+                <button class="close-modal" onclick="closeModal('transferModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); alert('Transfer completed!'); closeModal('transferModal');">
+                    <div class="form-group">
+                        <label>To Account</label>
+                        <input type="text" placeholder="Account number">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" placeholder="Amount">
+                    </div>
+                    <button type="submit" class="btn-primary">Transfer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="statementModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Monthly Statement</h3>
+                <button class="close-modal" onclick="closeModal('statementModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:1rem;">March 2024 - Total spent: ₹42,350</p>
+                <div style="background:#f0f2f8; padding:1rem; border-radius:16px; margin:1rem 0;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                        <span>Shopping</span>
+                        <span>₹18,420</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                        <span>Food</span>
+                        <span>₹12,560</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Transport</span>
+                        <span>₹7,340</span>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="alert('Downloading PDF...');">Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="cardDetailsModal1">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Prime Card Details</h3>
+                <button class="close-modal" onclick="closeModal('cardDetailsModal1')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:0.8rem;"><strong>Card Number:</strong> **** **** **** 3456</p>
+                <p style="margin-bottom:0.8rem;"><strong>Limit:</strong> ₹0</p>
+                <p style="margin-bottom:0.8rem;"><strong>Available:</strong> ₹0</p>
+                <p style="margin-bottom:0.8rem;"><strong>Credit Score:</strong> 780 (Good)</p>
+                <p style="margin-bottom:1.5rem;"><strong>Expiry:</strong> 12/27</p>
+                <button class="btn-primary" onclick="closeModal('cardDetailsModal1')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="cardDetailsModal2">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Elite Card Details</h3>
+                <button class="close-modal" onclick="closeModal('cardDetailsModal2')">&times;</button>
+            </div>
+            <div class="modal-body">
+            <p style="margin-bottom:0.8rem;"><strong>Card Number:</strong> **** **** **** 7654</p>
+                <p style="margin-bottom:0.8rem;"><strong>Limit:</strong> ₹0</p>
+                <p style="margin-bottom:0.8rem;"><strong>Available:</strong> ₹0</p>
+                <p style="margin-bottom:0.8rem;"><strong>Credit Score:</strong> 820 (Excellent)</p>
+                <p style="margin-bottom:1.5rem;"><strong>Expiry:</strong> 09/26</p>
+                <button class="btn-primary" onclick="closeModal('cardDetailsModal2')">Close</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Salary Input Modal (First Time Users) -->
+    <div class="modal" id="salaryModal">
+        <div class="modal-content" style="max-width: 400px; text-align: center; padding: 2.5rem;">
+            <div class="modal-icon" style="width: 80px; height: 80px; background: rgba(26,76,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: var(--primary); font-size: 2rem;">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <h2 style="margin-bottom: 0.5rem;">Welcome to Nexus Pay!</h2>
+            <p style="color: var(--gray); margin-bottom: 2rem;">To calculate your personalized credit limit, please enter your monthly salary.</p>
+            
+            <form id="salaryForm">
+                <div class="form-group">
+                    <label style="text-align: left;">Monthly Salary (₹)</label>
+                    <input type="number" id="monthlySalaryInput" placeholder="e.g. 50000" required style="font-size: 1.2rem; text-align: center; padding: 1.2rem;">
+                </div>
+                <button type="submit" class="btn-primary">Set Salary & Calculate Limit</button>
+            </form>
+            <p style="margin-top: 1.5rem; font-size: 0.8rem; color: var(--gray);">Credit Limit = Monthly Salary × 3</p>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        initializeDashboard(token);
+    });
+
+    let globalCards = [];
+    let globalTransactions = [];
+    let userSalary = 0;
+    let categoryChartInstance = null;
+    let trendChartInstance = null;
+
+    async function initializeDashboard(token) {
+        try {
+            // 1. Load User Info
+            const user = await fetchAPI('/api/auth/me', token);
+            userSalary = parseFloat(user.salary) || 0;
+            updateUserUI(user);
+
+            // 2. Check Salary (Show modal if not set or zero)
+            const currentSalary = parseFloat(user.salary);
+            if (!user.salary || isNaN(currentSalary) || currentSalary <= 0) {
+                openModal('salaryModal');
+            }
+
+            // 3. Load Transactions First (needed for Used calculation)
+            const transactions = await fetchAPI('/api/payments/history', token);
+            globalTransactions = transactions;
+
+            // 4. Load Cards and Render
+            const cards = await fetchAPI('/api/cards', token);
+            globalCards = cards;
+            
+            renderCards(cards, transactions, user.salary);
+            populatePaymentCards(cards);
+
+            // 5. Update UI with data
+            renderTransactions(transactions);
+            updateStats(cards, transactions);
+
+        } catch (err) {
+            console.error("Dashboard initialization failed:", err);
+        }
+    }
+
+    function showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+
+        // Show target section
+        const target = document.getElementById(sectionId);
+        if (target) {
+            target.classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // Update active state in sidebar
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.classList.remove('active');
+        });
+
+        // Highlight matching links (both mobile and desktop)
+        const baseId = sectionId.replace('-section', '');
+        document.querySelectorAll(`[id^="nav-${baseId}"]`).forEach(el => el.classList.add('active'));
+
+        // Trigger specific data loading if needed
+        if (sectionId === 'transactions-section') {
+            renderAllTransactions(globalTransactions);
+        } else if (sectionId === 'analytics-section') {
+            fetchAnalyticsData();
+        } else if (sectionId === 'my-cards-section') {
+            renderMyCards(globalCards);
+        } else if (sectionId === 'statements-section') {
+            renderStatements(globalCards);
+        }
+
+        // Close mobile sidebar if open
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        if (mobileSidebar && mobileSidebar.classList.contains('active')) {
+            mobileSidebar.classList.remove('active');
+            menuBtn.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        }
+    }
+
+    function renderMyCards(cards) {
+        const container = document.getElementById('myCardsContainer');
+        if (!container) return;
+        
+        const originalCardsContainer = document.querySelector('#dashboard-section .cards-row');
+        if (originalCardsContainer) {
+            container.innerHTML = originalCardsContainer.innerHTML;
+        }
+    }
+
+    function renderAllTransactions(transactions) {
+        const list = document.getElementById("allTransactionsList");
+        if (!list) return;
+
+        if (transactions.length === 0) {
+            list.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--gray);">No transactions found</div>`;
+            return;
+        }
+
+        list.innerHTML = transactions.map(tx => {
+            const isSuccess = tx.status === 'success' || tx.status === 'completed';
+            const date = new Date(tx.created_at);
+            
+            return `
+                <div class="transaction-item">
+                    <div class="transaction-icon ${isSuccess ? 'success' : 'danger'}">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <h4>${tx.category || 'General'} Payment</h4>
+                        <p>ID: ${tx.transaction_id.slice(0, 12)}... · ${date.toLocaleString()}</p>
+                    </div>
+                    <div class="transaction-amount negative">-₹${parseFloat(tx.amount).toLocaleString('en-IN')}</div>
+                    <span class="status-badge ${isSuccess ? '' : 'status-pending'}">${tx.status.toUpperCase()}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function fetchAnalyticsData() {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch('/api/analytics', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            renderAnalytics(data);
+        } catch (err) {
+            console.error("Analytics fetch error:", err);
+        }
+    }
+
+    function renderAnalytics(data) {
+        document.getElementById('analyticsTotalSpent').textContent = `₹${data.totalSpent.toLocaleString('en-IN')}`;
+        document.getElementById('analyticsTxCount').textContent = data.totalTransactions;
+
+        // Render Category Chart
+        const catCtx = document.getElementById('categoryChart')?.getContext('2d');
+        if (catCtx) {
+            if (categoryChartInstance) categoryChartInstance.destroy();
+            categoryChartInstance = new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.categoryData.map(d => d.category),
+                    datasets: [{
+                        data: data.categoryData.map(d => d.amount),
+                        backgroundColor: ['#1a4cff', '#7b3fe4', '#ff5e9c', '#00b38a', '#fdb24d', '#ff5e7c']
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        // Render Trend Chart
+        const trendCtx = document.getElementById('trendChart')?.getContext('2d');
+        if (trendCtx) {
+            if (trendChartInstance) trendChartInstance.destroy();
+            trendChartInstance = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: data.dateData.map(d => new Date(d.date).toLocaleDateString()),
+                    datasets: [{
+                        label: 'Spending',
+                        data: data.dateData.map(d => d.amount),
+                        borderColor: '#1a4cff',
+                        backgroundColor: 'rgba(26,76,255,0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    }
+
+    function renderStatements(cards) {
+        const container = document.getElementById('statementsContainer');
+        if (!container) return;
+
+        if (cards.length === 0) {
+            container.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--gray);">No cards found to generate statements</div>`;
+            return;
+        }
+
+        container.innerHTML = cards.map(card => {
+            const startDate = card.billing_cycle_start ? new Date(card.billing_cycle_start).toLocaleDateString() : 'N/A';
+            const endDate = card.billing_cycle_end ? new Date(card.billing_cycle_end).toLocaleDateString() : 'N/A';
+            const dueDt = card.due_date ? new Date(card.due_date) : null;
+            const dueDateStr = dueDt ? dueDt.toLocaleDateString() : 'N/A';
+            
+            // Notification logic
+            const today = new Date();
+            if (dueDt) {
+                const diffTime = dueDt - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                // Check if already notified for this card's due date to avoid duplicates every refresh
+                const notifKey = `notified_due_${card.id}_${dueDt.getTime()}`;
+                if (diffDays > 0 && diffDays <= 3 && !localStorage.getItem(notifKey)) {
+                    NexusNotif.add(`Reminder: Your credit card bill for **** ${card.last_four} is due in ${diffDays} days`, 'reminder');
+                    localStorage.setItem(notifKey, 'true');
+                }
+            }
+
+            // Statement generated notification (if start date is within last 2 days and not notified)
+            if (card.billing_cycle_start) {
+                const startDt = new Date(card.billing_cycle_start);
+                const diffTime = today - startDt;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const notifKey = `notified_stat_${card.id}_${startDt.getTime()}`;
+                if (diffDays >= 0 && diffDays <= 2 && !localStorage.getItem(notifKey)) {
+                    NexusNotif.add(`Your monthly statement for **** ${card.last_four} is ready`, 'transaction');
+                    localStorage.setItem(notifKey, 'true');
+                }
+            }
+
+            return `
+                <div class="stat-card" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; background: white; border-radius: 20px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.1rem; color: var(--dark);">**** ${card.last_four}</h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--gray);">${card.card_holder}</p>
+                        </div>
+                        <span class="status-badge" style="background: rgba(26,76,255,0.1); color: var(--primary);">${(card.card_type || 'Visa').toUpperCase()}</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; background: var(--light); border-radius: 12px; margin: 0.5rem 0;">
+                        <div>
+                            <p style="margin: 0; font-size: 0.75rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px;">Billing Cycle</p>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.9rem; font-weight: 500;">${startDate} - ${endDate}</p>
+                        </div>
+                        <div>
+                            <p style="margin: 0; font-size: 0.75rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px;">Due Date</p>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.9rem; font-weight: 600; color: var(--danger);">${dueDate}</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--gray-light); padding-top: 1rem;">
+                        <div>
+                            <p style="margin: 0; font-size: 0.75rem; color: var(--gray);">Statement Amount</p>
+                            <p style="margin: 0.1rem 0 0; font-size: 1.25rem; font-weight: 700; color: var(--dark);">₹${parseFloat(card.statement_amount || 0).toLocaleString('en-IN')}</p>
+                        </div>
+                        <button class="btn-primary" onclick="alert('Proceeding to pay statement for **** ${card.last_four}')" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;">Pay Now</button>
+                    </div>
+                    
+                    <div style="font-size: 0.8rem; color: var(--gray);">
+                        <i class="fas fa-info-circle"></i> Minimum Due: ₹${parseFloat(card.minimum_due || 0).toLocaleString('en-IN')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function fetchAPI(url, token) {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        return await res.json();
+    }
+
+    function updateUserUI(user) {
+        const firstName = user.first_name || "User";
+        const lastName = user.last_name || "";
+        const fullName = `${firstName} ${lastName}`.trim();
+        const initials = (firstName[0] + (lastName[0] || "")).toUpperCase();
+
+        document.querySelectorAll("#sidebarUserName").forEach(el => el.textContent = fullName);
+        document.querySelectorAll("#sidebarUserAvatar").forEach(el => el.textContent = initials);
+        
+        const greetingEl = document.getElementById('greeting');
+        const hour = new Date().getHours();
+        let greeting = 'Good evening';
+        if (hour < 12) greeting = 'Good morning';
+        else if (hour < 18) greeting = 'Good afternoon';
+        
+        if (greetingEl) greetingEl.textContent = `${greeting}, ${firstName} 👋`;
+
+        // Update current date
+        const dateBadge = document.querySelector('.date-badge');
+        if (dateBadge) {
+            const now = new Date();
+            dateBadge.innerHTML = `<i class="far fa-calendar-alt" style="margin-right:0.5rem;"></i> ${now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+        }
+    }
+
+    function renderCards(cards, transactions, salary) {
+        const container = document.querySelector('.cards-row');
+        if (!container) return;
+
+        if (cards.length === 0) {
+            container.innerHTML = `
+                <div class="animated-card" style="background: var(--gray-light); color: var(--gray); display: flex; align-items: center; justify-content: center; height: 200px; border: 2px dashed var(--gray);">
+                    <div style="text-align: center;">
+                        <i class="fas fa-plus-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        <p>No cards added yet</p>
+                    </div>
+                </div>`;
+            return;
+        }
+
+        const monthlySalary = parseFloat(salary) || 0;
+        const creditLimitPerCard = monthlySalary * 3; // Rule: Salary x 3
+
+        const settingsStr = localStorage.getItem('nexus_user_settings');
+        let privacy = { hideCards: true, hideBalance: false };
+        try { if(settingsStr) privacy = JSON.parse(settingsStr).privacy; } catch(e){}
+
+        container.innerHTML = cards.map((card, idx) => {
+            const cardTransactions = transactions.filter(t => t.bank_card_id === card.id && (t.status === 'success' || t.status === 'completed'));
+            const calculatedUsed = cardTransactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+            const used = parseFloat(card.used_amount !== undefined ? card.used_amount : calculatedUsed);
+            const limit = parseFloat(card.credit_limit || (monthlySalary > 0 ? (monthlySalary * 3) : (parseFloat(card.available_balance || 0) + used)));
+            const balance = limit - used;
+            
+            const score = 750 + (idx * 20); 
+            const scoreOffset = 188.5 * (1 - score/900); 
+
+            // Privacy masking
+            const displayBalance = privacy.hideBalance ? '••••••' : `₹${balance.toLocaleString('en-IN')}`;
+            const displayCardNum = privacy.hideCards ? `**** **** **** ${card.last_four}` : `4242 5678 9012 ${card.last_four}`;
+
+            return `
+                <div class="animated-card" onclick="showCardDetails(${JSON.stringify(card).replace(/"/g, '&quot;')}, ${used}, ${limit})">
+                    <div class="card-top">
+                        <div class="card-chip"></div>
+                        <span class="card-badge">${(card.card_type || 'Visa').toUpperCase()}</span>
+                    </div>
+                    <div class="card-main">
+                        <div class="balance-info">
+                            <div class="label">Available Balance</div>
+                            <div class="value">${displayBalance}</div>
+                        </div>
+                        <div class="score-container">
+                            <svg viewBox="0 0 70 70">
+                                <circle class="score-circle-bg" cx="35" cy="35" r="30"></circle>
+                                <circle class="score-circle-fill" cx="35" cy="35" r="30" style="stroke-dashoffset: ${scoreOffset}; stroke-dasharray: 188.5;"></circle>
+                            </svg>
+                            <div class="score-text">${score}<small>/900</small></div>
+                        </div>
+                    </div>
+                    <div class="card-number-row">${displayCardNum}</div>
+                    <div class="card-limit-row">
+                        <span>Limit: ₹${limit.toLocaleString('en-IN')}</span>
+                        <span>Used: ₹${used.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div class="card-footer">
+                        <span>${card.card_holder || 'User'}</span>
+                        <span>${card.expiry || '--/--'}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderTransactions(transactions) {
+        const list = document.getElementById("recentTransactionsList");
+        if (!list) return;
+
+        if (transactions.length === 0) {
+            list.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--gray);">No recent transactions</div>`;
+            return;
+        }
+
+        list.innerHTML = transactions.slice(0, 5).map(tx => {
+            const isSuccess = tx.status === 'success' || tx.status === 'completed';
+            const date = new Date(tx.created_at);
+            const timeAgo = getTimeAgo(date);
+
+            return `
+                <div class="transaction-item">
+                    <div class="transaction-icon ${isSuccess ? 'success' : 'danger'}">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <h4>${tx.category || 'General'} Payment</h4>
+                        <p>Ref: ${tx.transaction_id.slice(0, 8)}... · ${timeAgo}</p>
+                    </div>
+                    <div class="transaction-amount negative">-₹${parseFloat(tx.amount).toLocaleString('en-IN')}</div>
+                    <span class="status-badge ${isSuccess ? '' : 'status-pending'}">${tx.status.toUpperCase()}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function updateStats(cards, transactions) {
+        const totalBalance = cards.reduce((sum, c) => sum + parseFloat(c.available_balance), 0);
+        const totalExpenses = transactions
+            .filter(tx => tx.status === 'success' || tx.status === 'completed')
+            .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+
+        // Update UI by IDs
+        if (document.getElementById('statBalance')) {
+            document.getElementById('statBalance').textContent = `₹${totalBalance.toLocaleString('en-IN')}`;
+        }
+        if (document.getElementById('statIncome')) {
+            document.getElementById('statIncome').textContent = `₹0`; // Still placeholder until income logic is added
+        }
+        if (document.getElementById('statExpenses')) {
+            document.getElementById('statExpenses').textContent = `₹${totalExpenses.toLocaleString('en-IN')}`;
+        }
+        if (document.getElementById('statCashback')) {
+            document.getElementById('statCashback').textContent = `₹0`; // Still placeholder
+        }
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return `${seconds}s ago`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+        return date.toLocaleDateString();
+    }
+
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+        if (id === 'addCardModal') resetAddCardForm();
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    function showCardDetails(card, used, limit) {
+        const balance = limit - used;
+        const details = `Card: **** ${card.last_four}\nHolder: ${card.card_holder}\nCredit Limit: ₹${limit.toLocaleString('en-IN')}\nUsed Amount: ₹${used.toLocaleString('en-IN')}\nAvailable Balance: ₹${balance.toLocaleString('en-IN')}`;
+        alert(details);
+    }
+
+    
+
+    async function handleAddCard(event) {
+        event.preventDefault();
+        const form = event.target;
+        const cardNumber = document.getElementById('addCardNumber').value.replace(/\s/g, '');
+        const cardHolder = document.getElementById('addCardHolder').value;
+        const expiry = document.getElementById('addCardExpiry').value;
+        const token = localStorage.getItem('token');
+
+        try {
+            const res = await fetch('/api/cards/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ cardNumber, expiry, cardHolder })
+            });
+            if (res.ok) {
+                alert("Card added successfully!");
+                closeModal('addCardModal');
+                initializeDashboard(token);
+                // Reset preview
+                document.getElementById('previewCardNumber').textContent = '•••• •••• •••• ••••';
+                document.getElementById('previewCardHolder').textContent = 'YOUR NAME';
+                document.getElementById('previewExpiry').textContent = 'MM/YY';
+            } else {
+                const result = await res.json();
+                alert(result.error || "Failed to add card");
+            }
+        } catch (err) {
+            alert("Error adding card");
+        }
+    }
+
+    function populatePaymentCards(cards) {
+        const select = document.getElementById('paymentCardSelect');
+        if (!select) return;
+        select.innerHTML = '<option value="">Choose a card</option>' + 
+            cards.map(c => `<option value="${c.id}">**** ${c.last_four} (₹${parseFloat(c.available_balance).toLocaleString('en-IN')})</option>`).join('');
+    }
+
+    async function handlePayment(event) {
+        event.preventDefault();
+        const token = localStorage.getItem('token');
+        const cardId = document.getElementById('paymentCardSelect').value;
+        const amount = document.getElementById('paymentAmount').value;
+        const category = document.getElementById('paymentCategory').value;
+
+        if (!cardId) return alert("Please select a card");
+
+        try {
+            const res = await fetch('/api/payments/pay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ bank_card_id: cardId, amount, category })
+            });
+            if (res.ok) {
+                alert("Payment successful!");
+                closeModal('paymentModal');
+                initializeDashboard(token);
+            } else {
+                const result = await res.json();
+                alert(result.error || "Payment failed");
+            }
+        } catch (err) {
+            alert("Payment failed");
+        }
+    }
+
+    function resetAddCardForm() {
+        const form = document.querySelector('#addCardModal form');
+        if (form) form.reset();
+    }
+
+    // Event Listeners
+    document.querySelector('#addCardModal form').addEventListener('submit', handleAddCard);
+    document.getElementById('paymentForm').addEventListener('submit', handlePayment);
+
+    // Salary Form Submission
+    document.getElementById('salaryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const salary = document.getElementById('monthlySalaryInput').value;
+        const token = localStorage.getItem('token');
+
+        try {
+            console.log("Form submitted. Salary input:", salary);
+            if (!salary) return alert("Please enter a salary");
+            
+            const salaryValue = parseFloat(salary);
+            console.log("Parsed salary:", salaryValue);
+
+            const res = await fetch('/api/auth/salary', {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ salary: salaryValue })
+            });
+
+            console.log("Response status:", res.status);
+            const contentType = res.headers.get("content-type");
+
+            if (res.ok) {
+                if (contentType && contentType.includes("application/json")) {
+                    const data = await res.json();
+                    console.log("Update success:", data);
+                    closeModal('salaryModal');
+                    initializeDashboard(token);
+                } else {
+                    console.log("Success but not JSON response");
+                    closeModal('salaryModal');
+                    initializeDashboard(token);
+                }
+            } else {
+                let errorMessage = "Failed to update salary";
+                if (contentType && contentType.includes("application/json")) {
+                    const result = await res.json();
+                    errorMessage = result.message || errorMessage;
+                } else {
+                    const text = await res.text();
+                    console.error("Non-JSON error response:", text.slice(0, 200));
+                    if (res.status === 404) errorMessage = "API endpoint not found. Please restart the server.";
+                }
+                alert(errorMessage);
+            }
+        } catch (err) {
+            console.error("Fetch/Network error updating salary:", err);
+            alert("Error updating salary: " + err.message);
+        }
+    });
+
+
+    // Sidebar
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    if (menuBtn) menuBtn.onclick = () => { menuBtn.classList.toggle('active'); mobileSidebar.classList.toggle('active'); sidebarOverlay.classList.toggle('active'); };
+    if (sidebarOverlay) sidebarOverlay.onclick = () => { menuBtn.classList.remove('active'); mobileSidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); };
+
+    // Formatters & Live Preview
+    const addCardNumberInput = document.getElementById('addCardNumber');
+    const addCardExpiryInput = document.getElementById('addCardExpiry');
+    const addCardHolderInput = document.getElementById('addCardHolder');
+
+    if (addCardNumberInput) {
+        addCardNumberInput.addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g, '').match(/.{1,4}/g);
+            e.target.value = v ? v.join(' ') : '';
+            document.getElementById('previewCardNumber').textContent = e.target.value || '•••• •••• •••• ••••';
+            // Simple type detection
+            const type = e.target.value.startsWith('4') ? 'VISA' : e.target.value.startsWith('5') ? 'MASTERCARD' : 'VISA';
+            document.getElementById('previewCardType').textContent = type;
+        });
+    }
+
+    if (addCardExpiryInput) {
+        addCardExpiryInput.addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g, '');
+            if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2, 4);
+            e.target.value = v;
+            document.getElementById('previewExpiry').textContent = v || 'MM/YY';
+        });
+    }
+
+    if (addCardHolderInput) {
+        addCardHolderInput.addEventListener('input', e => {
+            document.getElementById('previewCardHolder').textContent = (e.target.value || 'YOUR NAME').toUpperCase();
+        });
+    }
+
+    const addCardTierSelect = document.getElementById('addCardTier');
+    if (addCardTierSelect) {
+        addCardTierSelect.addEventListener('change', e => {
+            document.getElementById('previewCardType').textContent = e.target.value;
+            const visual = document.getElementById('addCardVisual');
+            if (e.target.value === 'ELITE') {
+                visual.style.background = 'var(--card2-gradient)';
+            } else {
+                visual.style.background = 'var(--card1-gradient)';
+            }
+        });
+    }
+
+    // Initialize Preview static details based on salary
+    function updateAddCardPreviewStatic() {
+        const limitFloat = userSalary * 3;
+        const limitDisplay = '₹' + limitFloat.toLocaleString('en-IN');
+        
+        const previewArea = document.getElementById('addCardPreviewArea');
+        if (!previewArea) return;
+        
+        previewArea.querySelector('.balance-info .value').textContent = limitDisplay;
+        previewArea.querySelector('.card-limit-row span:first-child').textContent = `Limit (Salary x 3): ${limitDisplay}`;
+    }
+
+    function resetAddCardForm() {
+        const form = document.querySelector('#addCardModal form');
+        if (form) form.reset();
+        // Trigger manual updates for items that don't auto-reset preview
+        document.getElementById('previewCardType').textContent = 'PRIME';
+        document.getElementById('addCardVisual').style.background = 'var(--card1-gradient)';
+        updateAddCardPreviewStatic();
+    }
+
+    // Default dashboard formatters for other inputs
+    document.querySelectorAll('input[placeholder*="1234"]:not(#addCardNumber)').forEach(input => {
+        input.addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g, '').match(/.{1,4}/g);
+            e.target.value = v ? v.join(' ') : '';
+        });
+    });
+    document.querySelectorAll('input[placeholder="MM/YY"]:not(#addCardExpiry)').forEach(input => {
+        input.addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g, '');
+            if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2, 4);
+            e.target.value = v;
+        });
+    });
+</script>
+    </div>
+  <script src="notifications.js"></script>
+  <script src="sidebar.js"></script>
+</body>
+</html>

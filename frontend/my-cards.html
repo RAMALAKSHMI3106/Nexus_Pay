@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nexus Pay — My Cards</title>
+  <link rel="icon" href="logo_nexus.png">   
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── EXACT DASHBOARD VARIABLES ── */
+    :root {
+      --primary:        #1a4cff;
+      --primary-dark:   #0e3ad0;
+      --primary-light:  #4a7cff;
+      --secondary:      #7b3fe4;
+      --accent:         #ff5e9c;
+      --success:        #00b38a;
+      --warning:        #fdb24d;
+      --danger:         #ff5e7c;
+      --dark:           #121826;
+      --gray-dark:      #2f3545;
+      --gray:           #6e7687;
+      --gray-light:     #e9ecf2;
+      --light:          #f5f7fd;
+      --white:          #ffffff;
+      --gradient:       linear-gradient(145deg, #1a4cff, #7b3fe4);
+      --card1-gradient: linear-gradient(145deg, #1e2b4f, #162b4d);
+      --card2-gradient: linear-gradient(145deg, #283b5e, #1d3355);
+      --shadow-sm:      0 4px 12px rgba(0,0,0,.04);
+      --shadow-md:      0 8px 20px rgba(0,0,0,.08);
+      --shadow-lg:      0 16px 32px rgba(0,0,0,.12);
+      --border-radius:  20px;
+      --sidebar-w:      260px;
+    }
+
+    html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--light); color: var(--dark); overflow-x: hidden; }
+
+    /* ══ SHELL ══ */
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ══ SIDEBAR handled by sidebar.js ══ */
+
+    /* ══ MAIN ══ */
+    .page-main { flex: 1; display: flex; flex-direction: column; }
+    .page-header {
+      background: var(--white); padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--gray-light);
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: var(--shadow-sm); flex-shrink: 0;
+    }
+    .page-header h1 { font-size: 1.3rem; font-weight: 800; }
+    .page-header p { font-size: .83rem; color: var(--gray); margin-top: .1rem; }
+
+    .btn-primary {
+      padding: .7rem 1.4rem; background: var(--gradient); color: #fff;
+      font-size: .875rem; font-weight: 700; border: none; border-radius: 12px;
+      cursor: pointer; display: inline-flex; align-items: center; gap: .45rem;
+      transition: opacity .18s, transform .18s; font-family: 'Inter', sans-serif;
+    }
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:active { transform: scale(.97); }
+
+    .content { flex: 1; padding: 2rem; }
+
+    /* ══ KPI ROW ══ */
+    .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; margin-bottom: 2rem; }
+    .kpi-card {
+      background: var(--white); border: 1px solid var(--gray-light);
+      border-radius: var(--border-radius); padding: 1.35rem;
+      box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 1rem;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .kpi-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .kpi-icon.primary  { background: rgba(26,76,255,.1);  color: var(--primary); }
+    .kpi-icon.success  { background: rgba(0,179,138,.1);  color: var(--success); }
+    .kpi-icon.secondary{ background: rgba(123,63,228,.1); color: var(--secondary); }
+    .kpi-label { font-size: .78rem; color: var(--gray); font-weight: 500; margin-bottom: .3rem; }
+    .kpi-value { font-size: 1.5rem; font-weight: 800; color: var(--dark); }
+
+    /* ══ CARDS GRID ══ */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 1.5rem; }
+
+    /* ── DASHBOARD-SYNCED CARD STYLES ── */
+    .animated-card {
+      border-radius: 24px; padding: 1.45rem; color: white;
+      box-shadow: var(--shadow-lg); cursor: default;
+      animation: gentleFloat 5s infinite ease-in-out;
+      width: 100%; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: space-between;
+      min-height: 200px;
+    }
+    @keyframes gentleFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    
+    .animated-card.card-1 { background: var(--card1-gradient); }
+    .animated-card.card-2 { background: var(--card2-gradient); }
+
+    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; z-index: 1; }
+    .card-chip { width: 40px; height: 28px; background: linear-gradient(145deg, #cfb27c, #b39264); border-radius: 6px; position: relative; }
+    .card-chip::after { content: ''; position: absolute; top: 4px; left: 5px; width: 10px; height: 8px; background: rgba(255,255,200,0.7); border-radius: 2px 6px 3px 3px; }
+    .card-badge { background: rgba(255,255,255,0.15); padding: 0.25rem 0.9rem; border-radius: 30px; font-size: 0.7rem; font-weight: 600; }
+
+    .card-main { display: flex; justify-content: space-between; align-items: center; margin: 0.8rem 0; z-index: 1; }
+    .balance-info .label { font-size: 0.7rem; opacity: 0.7; }
+    .balance-info .value { font-size: 1.4rem; font-weight: 700; }
+
+    .score-container { position: relative; width: 60px; height: 60px; }
+    .score-container svg { width: 60px; height: 60px; }
+    .score-circle-bg { fill: none; stroke: rgba(255,255,200,0.15); stroke-width: 5; }
+    .score-circle-fill { fill: none; stroke: #ffd966; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 157; transform: rotate(-90deg); transform-origin: 50% 50%; }
+    .score-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-weight: 700; font-size: 0.85rem; text-align: center; }
+    .score-text small { font-size: 0.45rem; opacity: 0.7; display: block; }
+
+    .card-number-row { font-family: 'Courier New', monospace; font-size: 1rem; letter-spacing: 1.5px; margin: 0.6rem 0; z-index: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .card-limit-row { display: flex; justify-content: space-between; background: rgba(0,0,0,0.25); border-radius: 30px; padding: 0.4rem 1rem; font-size: 0.75rem; margin: 0.6rem 0; z-index: 1; }
+    .card-footer { display: flex; justify-content: space-between; font-size: 0.75rem; opacity: 0.9; z-index: 1; }
+
+    /* ── INFO BLOCK below card ── */
+    .card-info {
+      background: var(--white); border: 1px solid var(--gray-light);
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+      padding: 1.1rem 1.35rem; margin-top: -6px;
+      box-shadow: var(--shadow-sm);
+    }
+    .ci-progress-label { display: flex; justify-content: space-between; font-size: .75rem; color: var(--gray); margin-bottom: .45rem; }
+    .ci-bar { height: 5px; background: var(--gray-light); border-radius: 3px; margin-bottom: .85rem; }
+    .ci-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
+    .ci-footer { display: flex; justify-content: space-between; align-items: center; }
+    .ci-status { font-size: .75rem; color: var(--gray); display: flex; align-items: center; gap: .35rem; }
+    .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
+    .ci-link { font-size: .8rem; font-weight: 600; color: var(--primary); text-decoration: none; transition: color .18s; }
+    .ci-link:hover { color: var(--primary-dark); }
+
+    /* ══ EMPTY / SPINNER ══ */
+    .spinner-wrap { display: flex; flex-direction: column; align-items: center; gap: .85rem; color: var(--gray); font-size: .875rem; padding: 5rem 0; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--gray-light); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-msg { grid-column: 1/-1; text-align: center; padding: 5rem 1rem; color: var(--gray); }
+    .empty-msg i { font-size: 3rem; opacity: .25; display: block; margin-bottom: 1rem; }
+
+    /* ══ RESPONSIVE ══ */
+    @media (max-width: 780px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .content { padding: 1rem; }
+    }
+    @media (max-width: 620px) {
+      .kpi-row { grid-template-columns: 1fr; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Modal - Unified Sync ── */
+    .modal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+        background: white; border-radius: 28px; width: 100%; max-width: 480px;
+        padding: 1.8rem 1.5rem; animation: slideUp 0.3s ease; max-height: 90vh; overflow-y: auto;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .modal-header h3 { font-size: 1.3rem; font-weight: 600; }
+    .close-modal { background: none; border: none; font-size: 2rem; cursor: pointer; color: var(--gray); line-height: 1; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- MAIN -->
+  <div class="page-main">
+    <div class="page-header">
+      <div>
+        <h1><i class="fas fa-credit-card" style="color:var(--primary);margin-right:.5rem;font-size:1.1rem"></i>My Cards</h1>
+        <p>Manage all your linked credit cards</p>
+      </div>
+      <button class="btn-primary" onclick="openModal('addCardModal')">
+        <i class="fas fa-plus"></i> Add Card
+      </button>
+    </div>
+
+    <div class="content">
+      <!-- KPI -->
+      <div class="kpi-row" id="kpiRow" style="display:none">
+        <div class="kpi-card">
+          <div class="kpi-icon primary"><i class="fas fa-credit-card"></i></div>
+          <div><div class="kpi-label">Total Cards</div><div class="kpi-value" id="kpiCount">0</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon success"><i class="fas fa-wallet"></i></div>
+          <div><div class="kpi-label">Total Available</div><div class="kpi-value" id="kpiAvail">₹0</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon secondary"><i class="fas fa-gauge-high"></i></div>
+          <div><div class="kpi-label">Total Credit Limit</div><div class="kpi-value" id="kpiLimit">₹0</div></div>
+        </div>
+      </div>
+
+      <!-- Loader -->
+      <div id="loaderWrap">
+        <div class="spinner-wrap"><div class="spinner"></div><span>Loading cards…</span></div>
+      </div>
+
+      <!-- Cards Grid -->
+      <div class="cards-grid" id="cardsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Card Modal -->
+<div class="modal" id="addCardModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add New Card</h3>
+            <button class="close-modal" onclick="closeModal('addCardModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <!-- Card Preview Area -->
+            <div id="addCardPreviewArea" style="margin-bottom: 2rem;">
+                <div class="animated-card card-1" id="addCardVisual" style="animation: none; cursor: default; box-shadow: var(--shadow-md); min-height: 190px;">
+                    <div class="card-top">
+                        <div class="card-chip"></div>
+                        <span class="card-badge" id="previewCardType">PRIME</span>
+                    </div>
+                    <div class="card-main">
+                        <div class="balance-info">
+                            <div class="label">Available Balance</div>
+                            <div class="value">₹0</div>
+                        </div>
+                        <div class="score-container">
+                            <svg viewBox="0 0 70 70">
+                                <circle class="score-circle-bg" cx="35" cy="35" r="30"></circle>
+                                <circle class="score-circle-fill" cx="35" cy="35" r="30" stroke-dashoffset="20" style="stroke-dashoffset: 20; stroke: #ffd966;"></circle>
+                            </svg>
+                            <div class="score-text">820<small>/900</small></div>
+                        </div>
+                    </div>
+                    <div class="card-number-row" id="previewCardNumber">•••• •••• •••• ••••</div>
+                    <div class="card-limit-row">
+                        <span>Limit (Salary x 3): ₹0</span>
+                        <span>Used: ₹0</span>
+                    </div>
+                    <div class="card-footer">
+                        <span id="previewCardHolder">YOUR NAME</span>
+                        <span id="previewExpiry">MM/YY</span>
+                    </div>
+                </div>
+            </div>
+
+            <form id="addCardForm">
+                <div class="form-group">
+                    <label>Card Holder Name</label>
+                    <input type="text" id="addCardHolder" placeholder="e.g. JOHN DOE" required style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Card Number</label>
+                        <input type="text" id="addCardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                    </div>
+                    <div class="form-group">
+                        <label>Card Tier</label>
+                        <select id="addCardTier" style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                            <option value="PRIME">PRIME</option>
+                            <option value="ELITE">ELITE</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Expiry (MM/YY)</label>
+                        <input type="text" id="addCardExpiry" placeholder="MM/YY" maxlength="5" required style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                    </div>
+                    <div class="form-group">
+                        <label>CVV</label>
+                        <input type="password" id="addCardCvv" placeholder="***" maxlength="3" required style="width: 100%; padding: 0.9rem 1rem; border: 1.5px solid var(--gray-light); border-radius: 16px; font-size: 1rem;">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="width:100%">Add Card</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = 'login.html';
+
+  const fmt = n => '₹' + parseFloat(n||0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+
+  let userSalary = 0;
+
+  async function loadCards() {
+    try {
+      document.getElementById('loaderWrap').style.display = 'flex';
+      const [cardsRes, userRes, transRes] = await Promise.all([
+        fetch('/api/cards', { headers: { Authorization: 'Bearer ' + token } }),
+        fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } }),
+        fetch('/api/payments/history', { headers: { Authorization: 'Bearer ' + token } })
+      ]);
+
+      if (!cardsRes.ok || !userRes.ok || !transRes.ok) throw new Error('Failed to fetch data');
+      
+      const cards = await cardsRes.json();
+      const user = await userRes.json();
+      const transactions = await transRes.json();
+      
+      userSalary = parseFloat(user.salary) || 0;
+
+      document.getElementById('loaderWrap').style.display = 'none';
+      renderCards(cards, transactions);
+      updateAddCardPreviewStatic(); // Sync preview initially
+    } catch (e) {
+      console.error(e);
+      document.getElementById('loaderWrap').innerHTML = '<div class="empty-msg"><i class="fas fa-exclamation-circle"></i><p>Error loading cards. Please refresh.</p></div>';
+    }
+  }
+
+  function renderCards(cardsList, transactions = []) {
+    const grid = document.getElementById('cardsGrid');
+    if (!cardsList || !cardsList.length) {
+      grid.innerHTML = '<div class="empty-msg"><i class="fas fa-credit-card"></i><p>No cards found. Add one to get started.</p></div>';
+      return;
+    }
+    
+    document.getElementById('kpiRow').style.display = 'grid';
+    document.getElementById('kpiCount').textContent = cardsList.length;
+    
+    const creditLimitPerCard = userSalary * 3;
+    
+    // We'll calculate totals during mapping
+    let totalAvail = 0;
+    let totalLimit = 0;
+
+    grid.innerHTML = cardsList.map((c, i) => {
+      const isCard1 = i % 2 === 0;
+      
+      // Calculate 'Used' from transactions for this specific card
+      const cardTransactions = transactions.filter(t => t.bank_card_id === c.id && (t.status === 'success' || t.status === 'completed'));
+      const used = cardTransactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      
+      const finalUsed = parseFloat(c.used_amount !== undefined ? c.used_amount : used);
+      const limit = parseFloat(c.credit_limit || (userSalary > 0 ? creditLimitPerCard : (parseFloat(c.available_balance || 0) + finalUsed)));
+      const finalBalance = limit - finalUsed;
+      
+      totalAvail += finalBalance;
+      totalLimit += limit;
+
+      const pct = limit > 0 ? (finalBalance / limit) * 100 : 0;
+      const score = 750 + (i * 15);
+      const scoreOffset = 157 * (1 - score/900);
+
+      return `
+        <div style="display:flex; flex-direction:column; gap:0;">
+          <div class="animated-card ${isCard1 ? 'card-1' : 'card-2'}">
+            <div class="card-top">
+                <div class="card-chip"></div>
+                <span class="card-badge">${(c.card_type || 'Visa').toUpperCase()}</span>
+            </div>
+            <div class="card-main">
+                <div class="balance-info">
+                    <div class="label">Available Balance</div>
+                    <div class="value">${fmt(finalBalance)}</div>
+                </div>
+                <div class="score-container">
+                    <svg viewBox="0 0 70 70">
+                        <circle class="score-circle-bg" cx="35" cy="35" r="30"></circle>
+                        <circle class="score-circle-fill" cx="35" cy="35" r="30" stroke-dashoffset="${scoreOffset}" style="stroke-dashoffset: ${scoreOffset};"></circle>
+                    </svg>
+                    <div class="score-text">${score}<small>/900</small></div>
+                </div>
+            </div>
+            <div class="card-number-row">•••• •••• •••• ${c.last_four || '----'}</div>
+            <div class="card-limit-row">
+                <span>Limit: ${fmt(limit)}</span>
+                <span>Used: ${fmt(finalUsed)}</span>
+            </div>
+            <div class="card-footer">
+                <span>${c.card_holder || 'User'}</span>
+                <span>Exp: ${c.expiry || 'MM/YY'}</span>
+            </div>
+          </div>
+          <div class="card-info" style="margin-top:0; border-top:none; border-radius:0 0 24px 24px;">
+            <div class="ci-progress-label"><span>Utilization</span><span>${Math.round(100-pct)}% Used</span></div>
+            <div class="ci-bar"><div class="ci-fill" style="width:${pct}%; background: ${pct<20?'var(--danger)':'var(--success)'}"></div></div>
+            <div class="ci-footer">
+              <div class="ci-status"><div class="status-dot"></div> Active</div>
+              <a href="transactions.html" class="ci-link">Transactions <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('kpiAvail').textContent = fmt(totalAvail);
+    document.getElementById('kpiLimit').textContent = fmt(totalLimit);
+  }
+
+  // Modal Control
+  function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    if (id === 'addCardModal') resetAddCardForm();
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  function resetAddCardForm() {
+    const form = document.getElementById('addCardForm');
+    if (form) form.reset();
+    document.getElementById('previewCardNumber').textContent = '•••• •••• •••• ••••';
+    document.getElementById('previewCardHolder').textContent = 'YOUR NAME';
+    document.getElementById('previewExpiry').textContent = 'MM/YY';
+    document.getElementById('previewCardType').textContent = 'PRIME';
+    document.getElementById('addCardVisual').style.background = 'var(--card1-gradient)';
+    updateAddCardPreviewStatic();
+  }
+
+  function updateAddCardPreviewStatic() {
+    const limitFloat = userSalary * 3;
+    const limitDisplay = '₹' + limitFloat.toLocaleString('en-IN');
+    
+    const previewArea = document.getElementById('addCardPreviewArea');
+    if (!previewArea) return;
+    
+    previewArea.querySelector('.balance-info .value').textContent = limitDisplay;
+    previewArea.querySelector('.card-limit-row span:first-child').textContent = `Limit (Salary x 3): ${limitDisplay}`;
+  }
+
+  // Formatters & Live Preview
+  document.addEventListener('DOMContentLoaded', () => {
+    const addCardNumberInput = document.getElementById('addCardNumber');
+    const addCardExpiryInput = document.getElementById('addCardExpiry');
+    const addCardHolderInput = document.getElementById('addCardHolder');
+    const addCardTierSelect = document.getElementById('addCardTier');
+
+    if (addCardNumberInput) {
+      addCardNumberInput.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g, '').match(/.{1,4}/g);
+        e.target.value = v ? v.join(' ') : '';
+        document.getElementById('previewCardNumber').textContent = e.target.value || '•••• •••• •••• ••••';
+      });
+    }
+
+    if (addCardExpiryInput) {
+      addCardExpiryInput.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2, 4);
+        e.target.value = v;
+        document.getElementById('previewExpiry').textContent = v || 'MM/YY';
+      });
+    }
+
+    if (addCardHolderInput) {
+      addCardHolderInput.addEventListener('input', e => {
+        document.getElementById('previewCardHolder').textContent = (e.target.value || 'YOUR NAME').toUpperCase();
+      });
+    }
+
+    if (addCardTierSelect) {
+      addCardTierSelect.addEventListener('change', e => {
+        document.getElementById('previewCardType').textContent = e.target.value;
+        const visual = document.getElementById('addCardVisual');
+        if (e.target.value === 'ELITE') {
+          visual.style.background = 'var(--card2-gradient)';
+        } else {
+          visual.style.background = 'var(--card1-gradient)';
+        }
+      });
+    }
+
+    // Handle card form submission
+    document.getElementById('addCardForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const cardNumber = document.getElementById('addCardNumber').value.replace(/\s/g, '');
+      const cardHolder = document.getElementById('addCardHolder').value;
+      const expiry = document.getElementById('addCardExpiry').value;
+      const tier = document.getElementById('addCardTier').value;
+
+      try {
+        const res = await fetch('/api/cards/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ cardNumber, expiry, cardHolder, tier })
+        });
+        if (res.ok) {
+          alert("Card added successfully!");
+          closeModal('addCardModal');
+          loadCards();
+        } else {
+          const result = await res.json();
+          alert(result.error || "Failed to add card");
+        }
+      } catch (err) {
+        alert("Error adding card");
+      }
+    });
+  });
+
+  loadCards();
+</script>
+<script src="sidebar.js"></script>
+</body>
+</html>

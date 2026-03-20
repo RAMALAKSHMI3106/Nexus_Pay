@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Nexus Pay — Analytics</title>
+  <link rel="icon" href="logo_nexus.png">   
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--primary:#1a4cff;--secondary:#7b3fe4;--success:#00b38a;--danger:#ff5e7c;--warning:#fdb24d;--gray:#6e7687;--gray-light:#e9ecf2;--light:#f5f7fd;--white:#fff;--dark:#121826;--gradient:linear-gradient(145deg,#1a4cff,#7b3fe4);--shadow-sm:0 4px 12px rgba(0,0,0,.04);--shadow-md:0 8px 20px rgba(0,0,0,.08);--radius:16px}
+    
+    html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--light); color: var(--dark); overflow: hidden; }
+
+    /* ══ SHELL ══ */
+    .shell { display: flex; height: 100vh; }
+
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .topbar{background:var(--white);padding:1.25rem 2rem;border-bottom:1px solid var(--gray-light);box-shadow:var(--shadow-sm);display:flex;justify-content:space-between;align-items:center}
+    .topbar h1{font-size:1.3rem;font-weight:800}.topbar p{color:var(--gray);font-size:.85rem;margin-top:.1rem}
+    .content{flex:1;overflow-y:auto;padding:2rem;display:flex;flex-direction:column;gap:1.5rem}
+    .content::-webkit-scrollbar{width:5px}.content::-webkit-scrollbar-thumb{background:var(--gray-light);border-radius:4px}
+
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+    .kpi{background:var(--white);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow-sm);border:1px solid var(--gray-light)}
+    .kpi-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:.7rem}
+    .kpi-label{font-size:.75rem;color:var(--gray);font-weight:500;margin-bottom:.3rem}
+    .kpi-val{font-size:1.4rem;font-weight:800;color:var(--dark)}
+
+    .charts-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:1.5rem}
+    .chart-card{background:var(--white);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--gray-light)}
+    .chart-card h3{font-size:.95rem;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem;color:var(--dark)}
+    .chart-card h3 i{color:var(--primary)}
+    .chart-wrap{position:relative;height:240px}
+
+    .spinner{width:36px;height:36px;border:3px solid var(--gray-light);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:5rem auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:780px){.kpi-row{grid-template-columns:1fr 1fr}.content{padding:1rem}}
+  </style>
+</head>
+<body>
+  
+  <div class="shell">
+    <!-- Sidebar dynamically injected by sidebar.js -->
+    
+    <div class="main">
+      <div class="topbar"><div><h1>Analytics</h1><p>Your spending insights and trends</p></div></div>
+      <div class="content">
+        <div id="loader"><div class="spinner"></div></div>
+        <div id="analyticContent" style="display:none;flex-direction:column;gap:1.5rem">
+          
+          <!-- KPI Summary -->
+          <div class="kpi-row">
+            <div class="kpi"><div class="kpi-icon" style="background:rgba(26,76,255,.1);color:var(--primary)"><i class="fas fa-arrow-down"></i></div><div class="kpi-label">Total Spent</div><div class="kpi-val" id="kpiSpent">—</div></div>
+            <div class="kpi"><div class="kpi-icon" style="background:rgba(0,179,138,.1);color:var(--success)"><i class="fas fa-receipt"></i></div><div class="kpi-label">Transactions</div><div class="kpi-val" id="kpiTx">—</div></div>
+            <div class="kpi"><div class="kpi-icon" style="background:rgba(123,63,228,.1);color:var(--secondary)"><i class="fas fa-shopping-bag"></i></div><div class="kpi-label">Success Rate</div><div class="kpi-val" id="kpiRate">—</div></div>
+            <div class="kpi"><div class="kpi-icon" style="background:rgba(253,178,77,.18);color:var(--warning)"><i class="fas fa-calendar-check"></i></div><div class="kpi-label">Avg. Value</div><div class="kpi-val" id="kpiAvg">—</div></div>
+          </div>
+
+          <!-- Main Analytics Charts -->
+          <div class="charts-row">
+            <!-- Category Pie -->
+            <div class="chart-card">
+              <h3><i class="fas fa-chart-pie"></i> Spending by Category</h3>
+              <div class="chart-wrap"><canvas id="catChart"></canvas></div>
+            </div>
+            <!-- Status Doughnut -->
+            <div class="chart-card">
+              <h3><i class="fas fa-check-circle"></i> Success vs Failed</h3>
+              <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Line Chart Trend -->
+          <div class="chart-card" style="width: 100%;">
+            <h3><i class="fas fa-chart-line"></i> Transactions Over Time</h3>
+            <div class="chart-wrap" style="height: 300px;"><canvas id="trendChart"></canvas></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = 'login.html';
+  
+  const COLORS = ['#1a4cff','#7b3fe4','#ff5e9c','#00b38a','#fdb24d','#ff5e7c','#06b6d4'];
+
+  async function loadAnalytics() {
+    try {
+      const res = await fetch('/api/analytics', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Server error ' + res.status);
+      }
+      const data = await res.json();
+      
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('analyticContent').style.display = 'flex';
+      renderAnalytics(data);
+    } catch (e) {
+      console.error(e);
+      document.getElementById('loader').innerHTML = `<div style="text-align:center;color:var(--danger);padding:2rem;">
+        <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;display:block;"></i>
+        <p><strong>Failed to load analytics data</strong></p>
+        <p style="font-size:0.85rem;margin-top:0.5rem;opacity:0.8;">${e.message}</p>
+        <button onclick="location.reload()" style="margin-top:1.5rem;padding:0.6rem 1.2rem;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer;">Try Again</button>
+      </div>`;
+    }
+  }
+
+  function renderAnalytics(d) {
+    // 1. KPI Update
+    document.getElementById('kpiSpent').textContent = '₹' + (d.totalAmount || 0).toLocaleString('en-IN');
+    document.getElementById('kpiTx').textContent = d.totalTransactions || 0;
+    
+    const rate = d.totalTransactions > 0 ? Math.round((d.successCount / d.totalTransactions) * 100) : 0;
+    document.getElementById('kpiRate').textContent = rate + '%';
+    
+    const avg = d.successCount > 0 ? (d.totalAmount / d.successCount) : 0;
+    document.getElementById('kpiAvg').textContent = '₹' + Math.round(avg).toLocaleString('en-IN');
+
+    // 2. Spending by Category (Pie Chart)
+    if (d.categoryBreakdown && d.categoryBreakdown.length > 0) {
+      new Chart(document.getElementById('catChart'), {
+        type: 'pie',
+        data: {
+          labels: d.categoryBreakdown.map(x => x.category || 'Other'),
+          datasets: [{
+            data: d.categoryBreakdown.map(x => parseFloat(x.amount)),
+            backgroundColor: COLORS,
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } } }
+        }
+      });
+    }
+
+    // 3. Success vs Failed (Doughnut Chart)
+    new Chart(document.getElementById('statusChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Success', 'Failed'],
+        datasets: [{
+          data: [d.successCount, d.failedCount],
+          backgroundColor: ['#00b38a', '#ff5e7c'],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '70%',
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } }
+        }
+      }
+    });
+
+    // 4. Transactions Over Time (Line Chart)
+    if (d.dailyTransactions && d.dailyTransactions.length > 0) {
+      new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+          labels: d.dailyTransactions.map(x => {
+              const dt = new Date(x.date);
+              return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+          }),
+          datasets: [{
+            label: 'Daily Spent',
+            data: d.dailyTransactions.map(x => parseFloat(x.amount)),
+            borderColor: '#1a4cff',
+            backgroundColor: 'rgba(26,76,255,0.05)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#1a4cff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#f0f2f8' }, ticks: { callback: v => '₹' + v.toLocaleString() } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+  }
+
+  loadAnalytics();
+</script>
+<script src="sidebar.js"></script>
+</body>
+</html>
