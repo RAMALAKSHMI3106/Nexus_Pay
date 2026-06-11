@@ -91,3 +91,11 @@ Nexus_Pay/
 2. Add two-factor authentication.
 3. Enable SMS and email notifications.
 4. Enhance security and fraud detection mechanisms.
+
+#Screenshots
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/bf0d9cdb-f081-44c9-88df-69341e10443d" />
+<img width="1919" height="1016" alt="image" src="https://github.com/user-attachments/assets/b8f6b9c1-be93-424e-b4fb-5b2cb2e122a1" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/5becd4ea-175e-4496-8562-0b5dea5e041c" />
+
+
